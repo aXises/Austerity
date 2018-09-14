@@ -6,19 +6,31 @@
 #include <string.h>
 #include <ctype.h>
 
-typedef struct Cards {
+#define READ 0
+#define WRITE 1
+
+typedef struct {
     char colour;
     int value;
     int discount[4];
 } Card;
 
-typedef struct Decks {
+typedef struct {
     int amount;
     Card *cards;
 } Deck;
 
-typedef struct Players {
+typedef struct {
+    pid_t pid;
     char id;
+    FILE *input;
+    FILE *output;
 } Player;
+
+typedef struct {
+    int playerAmount;
+    Player *players;
+    Deck deck;
+} Game;
 
 #endif

@@ -1,10 +1,13 @@
 OPTS=-std=gnu99 --pedantic -Wall -Werror -g
-TARGETS = austerity
+TARGETS = austerity shenzi
 
 all: $(TARGETS)
 
 austerity: austerity.c shared.o util.o
-	gcc $(OPTS) austerity.c util.o -o austerity
+	gcc $(OPTS) austerity.c shared.o util.o -o austerity
+
+shenzi: shenzi.c shared.o util.o
+	gcc $(OPTS) shenzi.c shared.o util.o -o shenzi
 
 shared.o: shared.c shared.h
 	gcc $(OPTS) -c shared.c -o shared.o

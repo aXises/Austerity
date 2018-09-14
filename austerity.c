@@ -2,9 +2,6 @@
 #include "shared.h"
 #include "util.h"
 
-#define READ 0
-#define WRITE 1
-
 /**
  * Function Prototypes
  **/
@@ -12,10 +9,6 @@ void check_args(int, char **);
 void checkDeckFile(char **);
 void exit_with_error(int);
 Deck load_deck(char *);
-
-// void checkDeckFile(char **file) {
-    
-// }
 
 void check_args(int argc, char **argv) {
     if (argc < 6 || argc > 26) {
@@ -99,8 +92,8 @@ Deck load_deck(char *fileName) {
     if (file == NULL || !file) {
         exit_with_error(CANNOT_ACCESS_DECK_FILE);
     }
-    char *content = malloc(sizeof(char));
-    char character;
+    char *content = malloc(sizeof(char)), 
+    character;
     int counter = 0, cards = 0;
     while((character = getc(file)) != EOF) {
         content = realloc(content, sizeof(char) * (counter + 1));
@@ -110,6 +103,7 @@ Deck load_deck(char *fileName) {
         }
         counter++;
     }
+    fclose(file);
     content = realloc(content, sizeof(char) * (counter + 1));
     content[counter] = '\0';
     char **cardArr = split(content, "\n");
@@ -139,7 +133,6 @@ Deck load_deck(char *fileName) {
     }
     free(content);
     free(cardArr);
-    fclose(file);
     return deck;
 }
 
@@ -151,43 +144,96 @@ void display_deck(Deck deck) {
     }
 }
 
-void free_deck(Deck deck) {
-    free(deck.cards);
+void free_game(Game game) {
+    free(game.deck.cards);
+    for (int i = 0; i < game.playerAmount; i++) {
+        fclose(game.players[i].input);
+        fclose(game.players[i].output);
+    }
+    free(game.players);
 }
 
-// void setup_players(char *players) {
-    
-// }
+void setup_player(Player *player, char *file, const int playerAmount) {
+    int input[2], output[2];
+    if (pipe(input) != 0 || pipe(output) != 0) {
+        exit_with_error(BAD_START);
+    }
+    pid_t pid = fork();
+    if (pid < 0) {
+        exit_with_error(BAD_START);
+    } else if (pid > 0) { // Parent Process
+        if (close(input[READ]) == -1 || close(output[WRITE]) == -1) {
+            exit_with_error(BAD_START);
+        }
+        player->input = fdopen(input[WRITE], "w");
+        player->output = fdopen(output[READ], "r");
+        if (player->input == NULL || player->output == NULL) {
+            exit_with_error(BAD_START);
+        }
+        // wait(0);
+        // char buf[80];
+        // read(output[READ], buf, 80);
+        // printf("%s\n", buf);
+    } else { // Child Process
+        if (close(input[WRITE]) == -1) {
+            exit_with_error(BAD_START);
+        }
+        if (dup2(input[READ], STDIN_FILENO) == -1) {
+            exit_with_error(BAD_START);
+        }
+        if (close(input[READ]) == -1) {
+            exit_with_error(BAD_START);
+        }
+        if (close(output[READ]) == -1) {
+            exit_with_error(BAD_START);
+        }
+        if (dup2(output[WRITE], STDOUT_FILENO) == -1) {
+            exit_with_error(BAD_START);
+        }
+        if (close(output[WRITE]) == -1) {
+            exit_with_error(BAD_START);
+        }
+        player->pid = pid;
+        char playerAmountArg[2];
+        playerAmountArg[0] = playerAmount + '0';
+        playerAmountArg[1] = '\0';
+        char playerIdArg[2];
+        playerIdArg[0] = player->id;
+        playerIdArg[1] = '\0';
+        execlp(file, playerAmountArg, playerIdArg, NULL);
+        exit_with_error(BAD_START);
+    }
+}
 
-// void setup_player
+Player *setup_players(char **playerPaths, const int amount) {
+    Player *players = malloc(0);
+    for (int i = 0; i < amount; i++) {
+        if (i != amount) {
+            players = realloc(players, sizeof(Player) * (i + 1));
+        }
+        Player player;
+        player.id = 'A' + i;
+        setup_player(&player, playerPaths[i], amount);
+        players[i] = player;
+    }
+    return players;
+}
 
 int main(int argc, char **argv) {
     check_args(argc, argv);
-    Deck deck = load_deck("td");
-    display_deck(deck);
-    free_deck(deck);
-    char **players = malloc(0);
+    Game game;
+    game.deck = load_deck(argv[3]);
+    // display_deck(deck);
+    char **playersPaths = malloc(0);
+    game.playerAmount = 0;
     for (int i = 4; i < argc; i++) {
-        players = realloc(sizeof(char *) * (i - 3));
-        players[i - 4] = argv[i];
+        if (i != argc) {
+            playersPaths = realloc(playersPaths, sizeof(char *) * (i - 3));
+        }
+        playersPaths[i - 4] = argv[i];
+        game.playerAmount++;
     }
-    // setup_players();
-    // int fd[2];
-    // pipe(fd);
-    
-    // pid_t p = fork();
-    // if (p < 0) {
-    //     printf("fork failed\n");
-    //     exit(1);
-    // } else if (p > 0) {
-    //     close(fd[READ]);
-    //     write(fd[WRITE], "egg", 10);
-    //     wait(0);
-    //     printf("from parent\n");
-    // } else {
-        
-    //     char *args[1] = {"e"};
-    //     execvp("./test", args);
-    //     printf("from child, execvp failed\n");
-    // }
+    game.players = setup_players(playersPaths, game.playerAmount);
+    free(playersPaths);
+    free_game(game);
 }

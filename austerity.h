@@ -18,6 +18,6 @@
 #define PROTOCOL_ERR 7
 #define SIGINT_RECIEVED 10
 
-void checkError(int error);
+void exit_with_error(int);
 
 #endif
