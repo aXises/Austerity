@@ -10,7 +10,7 @@
 #define INVALID_ID 3
 #define COMM_ERR 6
 
-void exit_with_error(int);
-void check_args(int, char **);
+void exit_with_error(int, char *);
+void check_args(int, char **, char*);
 
 #endif

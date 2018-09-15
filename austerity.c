@@ -125,12 +125,14 @@ void display_deck(Deck deck) {
 }
 
 void free_game(Game game) {
-    free(game.deck.cards);
+    free(game.deckTotal.cards);
+    // free(game.deckFaceup.cards);
     for (int i = 0; i < game.playerAmount; i++) {
         fclose(game.players[i].input);
         fclose(game.players[i].output);
     }
     free(game.players);
+    
 }
 
 void setup_player(Player *player, char *file, const int playerAmount) {
@@ -150,10 +152,6 @@ void setup_player(Player *player, char *file, const int playerAmount) {
         if (player->input == NULL || player->output == NULL) {
             exit_with_error(BAD_START);
         }
-        // wait(0);
-        // char buf[80];
-        // read(output[READ], buf, 80);
-        // printf("%s\n", buf);
     } else { // Child Process
         if (close(input[WRITE]) == -1) {
             exit_with_error(BAD_START);
@@ -199,11 +197,55 @@ Player *setup_players(char **playerPaths, const int amount) {
     return players;
 }
 
+void send_message(Player player, char *message) {
+    fprintf(player.input, "test\n");
+    fflush(player.input);
+}
+
+void buy_card(Game *game, Player *player, int index) {
+    
+}
+
+void draw_cards(Game *game) {
+    if (game->deckTotal.amount < 8) {
+        game->deckFaceup.cards = game->deckTotal.cards;
+        game->deckFaceup.amount = game->deckTotal.amount;
+        game->deckIndex = game->deckTotal.amount;
+    } else {
+        game->deckFaceup.cards = malloc(0);
+        for (int i = game->deckIndex; i < game->deckTotal.amount; i++) {
+            if (i != game->deckTotal.amount) {
+                game->deckFaceup.cards = realloc(game->deckFaceup.cards,
+                        sizeof(Card) * (i + 1));
+            }
+            game->deckFaceup.cards[i] = game->deckTotal.cards[i];
+            game->deckIndex++;
+            if (i == 8) {
+                break;
+            }
+        }
+        game->deckFaceup.amount = 8;
+    }
+}
+
+void init_game(Game *game) {
+    game->deckIndex = 0;
+    game->deckFaceup.amount = 0;
+}
+
+void play_game(Game *game) {
+    init_game(game);
+    draw_cards(game);
+    printf("faceup: %i total: %i\n", game->deckFaceup.amount, game->deckTotal.amount);
+    display_deck(game->deckFaceup);
+}
+
 int main(int argc, char **argv) {
     check_args(argc, argv);
     Game game;
-    game.deck = load_deck(argv[3]);
-    // display_deck(deck);
+    game.deckTotal = load_deck(argv[3]);
+    game.winPoints = atoi(argv[2]);
+    // 
     char **playersPaths = malloc(0);
     game.playerAmount = 0;
     for (int i = 4; i < argc; i++) {
@@ -213,7 +255,24 @@ int main(int argc, char **argv) {
         playersPaths[i - 4] = argv[i];
         game.playerAmount++;
     }
+    for (int i = 0; i < 4; i++) {
+        game.tokenPile[i] = atoi(argv[1]);
+    }
     game.players = setup_players(playersPaths, game.playerAmount);
+    printf("Comm started -----\n");
+    for (int i = 0; i < game.playerAmount; i++) {
+        send_message(game.players[i], "test");
+        char c[200];
+        char *e = c;
+        size_t s = 80;
+        if (getline(&e,&s,game.players[i].output) == -1) {
+            printf("hub err\n");
+        }
+        printf("recieved from dum kid: %s", c);
+    }
+
+    // play_game(&game);
+    // printf("%i\n", game.playerAmount);
     free(playersPaths);
     free_game(game);
 }

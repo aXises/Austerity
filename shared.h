@@ -33,7 +33,11 @@ typedef struct {
 typedef struct {
     int playerAmount;
     Player *players;
-    Deck deck;
+    Deck deckTotal;
+    Deck deckFaceup;
+    int deckIndex;
+    int tokenPile[4];
+    int winPoints;
 } Game;
 
 int is_string_digit(char *);

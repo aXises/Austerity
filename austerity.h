@@ -14,6 +14,11 @@
 #define PROTOCOL_ERR 7
 #define SIGINT_RECIEVED 10
 
+#define PURPLE 0
+#define BLUE 1
+#define YELLOW 2
+#define RED 3
+
 /**
  * Function Prototypes
  **/

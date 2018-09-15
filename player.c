@@ -1,9 +1,9 @@
 #include "player.h"
 
-void exit_with_error(int error) {
+void exit_with_error(int error, char *name) {
     switch(error) {
         case(WRONG_ARG_NUM):
-            fprintf(stderr, "Usage: {player} pcount myid\n");
+            fprintf(stderr, "Usage: %s pcount myid\n", name);
             break;
         case(INVALID_PLAYER_COUNT):
             fprintf(stderr, "Invalid player count\n");
@@ -20,14 +20,18 @@ void exit_with_error(int error) {
     exit(error);
 }
 
-void check_args(int argc, char **argv) {
-    if (argc != 3) {
-        exit_with_error(WRONG_ARG_NUM);
+void check_args(int argc, char **argv, char *name) {
+    if (argc != 2) {
+        exit_with_error(WRONG_ARG_NUM, name);
+    }
+    if (!is_string_digit(argv[0])) {
+        exit_with_error(INVALID_PLAYER_COUNT, name);
     }
     if (!is_string_digit(argv[1])) {
-        exit_with_error(INVALID_PLAYER_COUNT);
-    }
-    if (!isdigit(argv[2])) {
-        exit_with_error(INVALID_ID);
+        exit_with_error(INVALID_ID, name);
     }
 }
+
+// void send_message(char *message) {
+//     printf("");
+// }
