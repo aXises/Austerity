@@ -3,17 +3,17 @@ TARGETS = austerity shenzi
 
 all: $(TARGETS)
 
-austerity: austerity.c shared.o util.o
-	gcc $(OPTS) austerity.c shared.o util.o -o austerity
+austerity: austerity.c shared.o
+	gcc $(OPTS) austerity.c shared.o -o austerity
 
-shenzi: shenzi.c shared.o util.o
-	gcc $(OPTS) shenzi.c shared.o util.o -o shenzi
+shenzi: shenzi.c shared.o player.o
+	gcc $(OPTS) shenzi.c shared.o player.o -o shenzi
 
 shared.o: shared.c shared.h
 	gcc $(OPTS) -c shared.c -o shared.o
 
-util.o: util.c util.h
-	gcc $(OPTS) -c util.c -o util.o
-
+player.o: player.c player.h
+	gcc $(OPTS) -c player.c -o player.o
+	
 clean:
 	rm -f *.o austerity

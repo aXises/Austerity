@@ -1,8 +1,11 @@
 #ifndef SHARED_H
 #define SHARED_H
 
-#include <stdio.h> 
+#include <stdio.h>
 #include <stdlib.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -22,7 +25,7 @@ typedef struct {
 
 typedef struct {
     pid_t pid;
-    char id;
+    int id;
     FILE *input;
     FILE *output;
 } Player;
@@ -32,5 +35,8 @@ typedef struct {
     Player *players;
     Deck deck;
 } Game;
+
+int is_string_digit(char *);
+char **split(char *, char *);
 
 #endif

@@ -6,7 +6,4 @@
 #include <string.h>
 #include <ctype.h>
 
-int is_string_digit(char *);
-char **split(char *, char *);
-
 #endif

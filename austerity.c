@@ -1,14 +1,4 @@
 #include "austerity.h"
-#include "shared.h"
-#include "util.h"
-
-/**
- * Function Prototypes
- **/
-void check_args(int, char **);
-void checkDeckFile(char **);
-void exit_with_error(int);
-Deck load_deck(char *);
 
 void check_args(int argc, char **argv) {
     if (argc < 6 || argc > 26) {
@@ -26,40 +16,30 @@ void exit_with_error(int error) {
         case(WRONG_ARG_NUM):
             fprintf(stderr, "Usage: austerity tokens points deck player "\
                     "player [player ...]\n");
-            exit(WRONG_ARG_NUM);
             break;
         case(BAD_ARG):
             fprintf(stderr, "Bad argument\n");
-            exit(BAD_ARG);
             break;
         case(CANNOT_ACCESS_DECK_FILE):
             fprintf(stderr, "Cannot access deck file\n");
-            exit(CANNOT_ACCESS_DECK_FILE);
             break;
         case(INVALID_DECK_FILE):
             fprintf(stderr, "Invalid deck file contents\n");
-            exit(INVALID_DECK_FILE);
             break;
         case(BAD_START):
             fprintf(stderr, "Bad start\n");
-            exit(BAD_START);
             break;
         case(CLIENT_DISCONNECT):
             fprintf(stderr, "Client disconnected\n");
-            exit(CLIENT_DISCONNECT);
             break;
         case(PROTOCOL_ERR):
             fprintf(stderr, "Protocol error by client\n");
-            exit(PROTOCOL_ERR);
             break;
         case(SIGINT_RECIEVED):
             fprintf(stderr, "SIGINT caught\n");
-            exit(SIGINT_RECIEVED);
-            break;
-        default:
-            exit(NORMAL);
             break;
     }
+    exit(error);
 }
 
 void check_card(char *content) {
@@ -198,7 +178,7 @@ void setup_player(Player *player, char *file, const int playerAmount) {
         playerAmountArg[0] = playerAmount + '0';
         playerAmountArg[1] = '\0';
         char playerIdArg[2];
-        playerIdArg[0] = player->id;
+        playerIdArg[0] = (player->id) + '0';
         playerIdArg[1] = '\0';
         execlp(file, playerAmountArg, playerIdArg, NULL);
         exit_with_error(BAD_START);
@@ -212,7 +192,7 @@ Player *setup_players(char **playerPaths, const int amount) {
             players = realloc(players, sizeof(Player) * (i + 1));
         }
         Player player;
-        player.id = 'A' + i;
+        player.id = i;
         setup_player(&player, playerPaths[i], amount);
         players[i] = player;
     }

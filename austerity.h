@@ -1,12 +1,8 @@
 #ifndef AUSTERITY_H
 #define AUSTERITY_H
 
-#include <stdio.h> 
-#include <stdlib.h>
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <string.h>
+#include "shared.h"
+#include "util.h"
 
 #define NORMAL 0
 #define WRONG_ARG_NUM 1
@@ -18,6 +14,12 @@
 #define PROTOCOL_ERR 7
 #define SIGINT_RECIEVED 10
 
+/**
+ * Function Prototypes
+ **/
+void check_args(int, char **);
+void checkDeckFile(char **);
 void exit_with_error(int);
+Deck load_deck(char *);
 
 #endif
