@@ -11,6 +11,7 @@
 
 #define READ 0
 #define WRITE 1
+#define MAX_INPUT 256
 
 typedef struct {
     char colour;

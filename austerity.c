@@ -198,7 +198,7 @@ Player *setup_players(char **playerPaths, const int amount) {
 }
 
 void send_message(Player player, char *message) {
-    fprintf(player.input, "test\n");
+    fprintf(player.input, "%s\n", message);
     fflush(player.input);
 }
 
@@ -228,6 +228,65 @@ void draw_cards(Game *game) {
     }
 }
 
+char *listen(Player player) {
+    char *message = malloc(sizeof(char) * MAX_INPUT);
+    //size_t length = (size_t) MAX_INPUT;
+    if (fgets(message, MAX_INPUT, player.output) == NULL) {
+        printf("hub err\n");
+    }
+    printf("recieved from player: %s", message);
+    return message;
+}
+
+int match_seperators(char *str, int expectedColumn, int expectedComma) {
+    int colAmount = 0, commaAmount = 0;
+    for (int i = 0; i < (strlen(str) - 1); i++) {
+        switch(str[i]) {
+            case(':'):
+                colAmount++;
+                break;
+            case(','):
+                commaAmount++;
+                break;
+        }
+    }
+    return colAmount == expectedColumn && commaAmount == expectedComma; 
+}
+
+void process_purchase(Game *game, Player *player, char *encoded) {
+    printf("**processing purchase\n");
+    if (!match_seperators(encoded, 1, 4)) {
+        printf("purchase com err\n");
+    }
+    char **colSplit = split(encoded, ":");
+    if (strlen(colSplit[0]) != 9 || strlen(colSplit[1]) != 10) {
+        printf("purchase com err\n");
+    }
+    printf("*** %s -- %s\n", colSplit[0], colSplit[1]);
+    for (int i = 0; i < 9; i++) {
+        if (colSplit[1][i] != ',' && colSplit[1][i] != '\n'
+                && !isdigit(colSplit[1][i])) {
+            printf("purchase com err\n");  
+        }
+    }
+    free(colSplit);
+    
+}
+
+
+void process(Game *game, Player *player, char *encoded) {
+    printf("processing message from: %c\n", player->id + 'A');
+    if (strstr(encoded, "purchase") != NULL) {
+        process_purchase(game, player, encoded);
+    } else if (strstr(encoded, "take") != NULL) {
+        printf("**processing take\n");   
+    } else if (strstr(encoded, "wild") != NULL) {
+        printf("**processing wild\n");   
+    } else {
+        printf("protocol err\n");
+    }
+}
+
 void init_game(Game *game) {
     game->deckIndex = 0;
     game->deckFaceup.amount = 0;
@@ -238,6 +297,14 @@ void play_game(Game *game) {
     draw_cards(game);
     printf("faceup: %i total: %i\n", game->deckFaceup.amount, game->deckTotal.amount);
     display_deck(game->deckFaceup);
+    printf("Comm started -----\n");
+    for (int i = 0; i < game->playerAmount; i++) {
+        send_message(game->players[i], "test");
+        char *message = listen(game->players[i]);
+        process(game, &(game->players[i]), message);
+        free(message);
+        send_message(game->players[i], "exit");
+    }
 }
 
 int main(int argc, char **argv) {
@@ -259,19 +326,7 @@ int main(int argc, char **argv) {
         game.tokenPile[i] = atoi(argv[1]);
     }
     game.players = setup_players(playersPaths, game.playerAmount);
-    printf("Comm started -----\n");
-    for (int i = 0; i < game.playerAmount; i++) {
-        send_message(game.players[i], "test");
-        char c[200];
-        char *e = c;
-        size_t s = 80;
-        if (getline(&e,&s,game.players[i].output) == -1) {
-            printf("hub err\n");
-        }
-        printf("recieved from dum kid: %s", c);
-    }
-
-    // play_game(&game);
+    play_game(&game);
     // printf("%i\n", game.playerAmount);
     free(playersPaths);
     free_game(game);

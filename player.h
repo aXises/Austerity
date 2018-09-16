@@ -12,5 +12,6 @@
 
 void exit_with_error(int, char *);
 void check_args(int, char **, char*);
+void play(char *);
 
 #endif

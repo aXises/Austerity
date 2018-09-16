@@ -32,6 +32,29 @@ void check_args(int argc, char **argv, char *name) {
     }
 }
 
-// void send_message(char *message) {
-//     printf("");
-// }
+void send_message(char *message) {
+    printf("%s\n", message);
+    fflush(stdout);
+}
+
+char *listen(void) {
+    char *message = malloc(sizeof(char) * MAX_INPUT);
+    //size_t length = (size_t) MAX_INPUT;
+    if (fgets(message, MAX_INPUT, stdin) == NULL) {
+        fprintf(stderr, "comm err\n");
+    }
+    fprintf(stderr, "recieved from hub: %s", message);
+    return message;
+}
+
+void play(char *name) {
+    while (1) {
+        char *message = listen();
+        send_message("purchase1:1,1,1,1,0");
+        if (strcmp(listen(), "exit\n") == 0) {
+            free(message);
+            break;
+        }
+    }
+    fprintf(stderr, "ended\n");
+}
