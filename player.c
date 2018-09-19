@@ -51,6 +51,11 @@ void process_dowhat() {
     send_message("take1,1,1,1");
 }
 
+// Player setup() {
+//     Player player;
+//     player.
+// }
+
 void process(char *encoded) {
     if (strstr(encoded, "dowhat") != NULL) {
         process_dowhat();
@@ -71,7 +76,7 @@ void process(char *encoded) {
     }
 }
 
-void play(char *name) {
+void play(char *id) {
     while (1) {
         char *message = listen();
         if (strcmp(message, "eog\n") == 0) {
@@ -81,5 +86,5 @@ void play(char *name) {
         process(message);
         free(message);
     }
-    fprintf(stderr, "player %s shutdown\n", name);
+    fprintf(stderr, "player %s shutdown\n", id);
 }

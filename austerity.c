@@ -138,9 +138,7 @@ void free_game(Game game) {
     for (int i = 0; i < game.playerAmount; i++) {
         fclose(game.players[i].input);
         fclose(game.players[i].output);
-        if (game.players[i].hand.amount > 0) {
-            free(game.players[i].hand.cards);
-        }
+        free(game.players[i].hand.cards);
     }
     free(game.players);
 }
@@ -388,6 +386,7 @@ int process_take(Game *game, Player *player, char *encoded) {
             player->tokens[i] += (commaSplit[i][0] - '0');
         }
     }
+    free(commaSplit);
     return 1;
 }
 
