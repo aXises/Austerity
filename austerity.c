@@ -42,18 +42,10 @@ void exit_with_error(int error) {
     exit(error);
 }
 
-void check_card(char *content) {
-    if (content[0] != 'B' && content[0] != 'Y' && content[0] != 'P' &&
-                content[0] != 'R') {
-        exit_with_error(INVALID_DECK_FILE);            
-    }
+int match_seperators(char *str, int expectedColumn, int expectedComma) {
     int colAmount = 0, commaAmount = 0;
-    for (int i = 1; i < strlen(content); i++) {
-        if (content[i] != ':' && content[i] != ',' && content[i] != '\n'
-                && !isdigit(content[i])) {
-            exit_with_error(INVALID_DECK_FILE);            
-        }
-        switch(content[i]) {
+    for (int i = 0; i < (strlen(str) - 1); i++) {
+        switch(str[i]) {
             case(':'):
                 colAmount++;
                 break;
@@ -61,9 +53,23 @@ void check_card(char *content) {
                 commaAmount++;
                 break;
         }
-    }       
-    if (colAmount != 2 || commaAmount != 3) {
+    }
+    return colAmount == expectedColumn && commaAmount == expectedComma; 
+}
+
+void check_card(char *content) {
+    if (content[0] != 'B' && content[0] != 'Y' && content[0] != 'P' &&
+                content[0] != 'R') {
+        exit_with_error(INVALID_DECK_FILE);            
+    }
+    if (!match_seperators(content, 2, 3)) {
         exit_with_error(INVALID_DECK_FILE);
+    }
+    for (int i = 1; i < strlen(content); i++) {
+        if (content[i] != ':' && content[i] != ',' && content[i] != '\n'
+                && !isdigit(content[i])) {
+            exit_with_error(INVALID_DECK_FILE);            
+        }
     }
 }
 
@@ -105,7 +111,7 @@ Deck load_deck(char *fileName) {
             if (strcmp(commaSplit[j], "") == 0) {
                 exit_with_error(INVALID_DECK_FILE); 
             }
-            card.discount[j] = atoi(commaSplit[j]);
+            card.cost[j] = atoi(commaSplit[j]);
         }
         deck.cards[i] = card;
         free(colSplit);
@@ -119,20 +125,24 @@ Deck load_deck(char *fileName) {
 void display_deck(Deck deck) {
     for (int i = 0; i < deck.amount; i++) {
         Card c = deck.cards[i];
-        printf("%c %i %i %i %i %i\n", c.colour, c.value, c.discount[0],
-                c.discount[1], c.discount[2], c.discount[3]);
+        printf("%i: %c %i %i %i %i %i\n", i, c.colour, c.value, c.cost[0],
+                c.cost[1], c.cost[2], c.cost[3]);
     }
 }
 
 void free_game(Game game) {
-    free(game.deckTotal.cards);
-    // free(game.deckFaceup.cards);
+    if (game.deckFaceup.amount > 0) {
+        free(game.deckTotal.cards);
+    }
+    free(game.deckFaceup.cards);
     for (int i = 0; i < game.playerAmount; i++) {
         fclose(game.players[i].input);
         fclose(game.players[i].output);
+        if (game.players[i].hand.amount > 0) {
+            free(game.players[i].hand.cards);
+        }
     }
     free(game.players);
-    
 }
 
 void setup_player(Player *player, char *file, const int playerAmount) {
@@ -191,6 +201,13 @@ Player *setup_players(char **playerPaths, const int amount) {
         }
         Player player;
         player.id = i;
+        player.wildTokens = 0;
+        player.hand.amount = 0;
+        player.hand.cards = malloc(0);
+        for (int j = 0; j < 4; j++) {
+            player.currentDiscount[j] = 0;
+            player.tokens[j] = 0;
+        }
         setup_player(&player, playerPaths[i], amount);
         players[i] = player;
     }
@@ -202,8 +219,17 @@ void send_message(Player player, char *message) {
     fflush(player.input);
 }
 
-void buy_card(Game *game, Player *player, int index) {
-    
+int has_next_card(Game *game) {
+    return game->deckTotal.amount != game->deckIndex;
+}
+
+void draw_next(Game *game, Deck *deck) {
+    if (has_next_card(game)) {
+        Card card = game->deckTotal.cards[(game->deckIndex) - 1];
+        game->deckIndex++;
+        deck->cards[7] = card;
+        deck->amount++;
+    }
 }
 
 void draw_cards(Game *game) {
@@ -228,9 +254,34 @@ void draw_cards(Game *game) {
     }
 }
 
+void buy_card(Game *game, Player *player, int index) {
+    Deck newDeck;
+    newDeck.cards = malloc(0);
+    newDeck.amount = 0;
+    player->hand.cards = realloc(player->hand.cards, player->hand.amount + 1);
+    player->hand.cards[player->hand.amount] = game->deckFaceup.cards[index];
+    player->hand.amount++;
+    for (int i = 0; i < (game->deckFaceup.amount - 1); i++) {
+        newDeck.cards = realloc(newDeck.cards, sizeof(Card) * (i + 1));
+        if (i < index) {
+            newDeck.cards[i] = game->deckFaceup.cards[i];
+        } else {
+            newDeck.cards[i] = game->deckFaceup.cards[i + 1];
+        }
+        newDeck.amount++;
+    }
+    if (!has_next_card(game)) {
+        game->deckFaceup.amount--;
+    }
+    newDeck.cards = realloc(newDeck.cards,
+            sizeof(Card) * (newDeck.amount + 1));
+    free(game->deckFaceup.cards);
+    draw_next(game, &newDeck);
+    game->deckFaceup.cards = newDeck.cards;
+}
+
 char *listen(Player player) {
     char *message = malloc(sizeof(char) * MAX_INPUT);
-    //size_t length = (size_t) MAX_INPUT;
     if (fgets(message, MAX_INPUT, player.output) == NULL) {
         printf("hub err\n");
     }
@@ -238,51 +289,120 @@ char *listen(Player player) {
     return message;
 }
 
-int match_seperators(char *str, int expectedColumn, int expectedComma) {
-    int colAmount = 0, commaAmount = 0;
-    for (int i = 0; i < (strlen(str) - 1); i++) {
-        switch(str[i]) {
-            case(':'):
-                colAmount++;
-                break;
-            case(','):
-                commaAmount++;
-                break;
+int use_tokens(Player *player, Card card, int tokens[4], int wild) {
+    printf("Player %c purchased\n", player->id + 'A');
+    // for (int i = 0; i < 4; i++) {
+    //     if (player->tokens[i] < tokens[i]) {
+    //         return 0;
+    //     }
+    // }
+    int usedWild = 0;
+    for (int i = 0; i < 4; i++) {
+        printf("token: %i cost: %i\n", tokens[i], card.cost[i]);
+        if (tokens[i] < card.cost[i]) {
+            int difference = card.cost[i] - tokens[i];
+
+            if (difference > (wild - usedWild)) {
+                printf("not enough %i\n", i);
+                return 0;
+            } else {
+                printf("%i used, using %i on %i\n", usedWild, difference, i);
+                usedWild += difference;
+            }
         }
     }
-    return colAmount == expectedColumn && commaAmount == expectedComma; 
+    for (int i = 0; i < 4; i++) {
+        player->tokens[i] -= tokens[i];
+    }
+    player->wildTokens -= wild;
+    printf("token: %i\n", wild);
+    return 1;
 }
 
-void process_purchase(Game *game, Player *player, char *encoded) {
-    printf("**processing purchase\n");
+int process_purchase(Game *game, Player *player, char *encoded) {
     if (!match_seperators(encoded, 1, 4)) {
-        printf("purchase com err\n");
+        return 0;
     }
     char **colSplit = split(encoded, ":");
     if (strlen(colSplit[0]) != 9 || strlen(colSplit[1]) != 10) {
-        printf("purchase com err\n");
+        return 0;
     }
     printf("*** %s -- %s\n", colSplit[0], colSplit[1]);
     for (int i = 0; i < 9; i++) {
         if (colSplit[1][i] != ',' && colSplit[1][i] != '\n'
                 && !isdigit(colSplit[1][i])) {
-            printf("purchase com err\n");  
+            return 0;
         }
     }
+    if (atoi(colSplit[0]) > 7) {
+        return 0;
+    }
+    int index = colSplit[0][strlen(colSplit[0]) - 1] - '0';
+    int tokens[4];
+    for (int i = 0; i < 4; i++) {
+        tokens[i] = colSplit[1][2 * i] - '0';
+    }
+    int status = use_tokens(player, game->deckFaceup.cards[index], tokens,
+            colSplit[1][8]  - '0');
+    if (!status) {
+        return 0;
+    }
+    buy_card(game, player, index);
     free(colSplit);
-    
+    return 1;
 }
 
+int process_take(Game *game, Player *player, char *encoded) {
+    if (!match_seperators(encoded, 0, 3)) {
+        return 0;
+    }
+    char **commaSplit = split(encoded, ",");
+    if (strlen(commaSplit[0]) != 5) {
+        return 0;
+    }
+    for (int i = 4; i < strlen(encoded); i++) {
+        if (encoded[i] != ',' && encoded[i] != '\n'
+                && !isdigit(encoded[i])) {
+            return 0;
+        }
+    }
+    for (int i = 0; i < 4; i++) {
+        if (i == 0) {
+            printf("encoded: %c\n", commaSplit[0][4]);
+            if ((commaSplit[0][4] - '0') > game->tokenPile[0]) {
+                return 0;
+            }
+        } else {
+            printf("encoded: %c\n", commaSplit[i][0]);
+            if ((commaSplit[i][0] - '0') > game->tokenPile[i]) {
+                return 0;
+            }
+        }
+    }
+    for (int i = 0; i < 4; i++) {
+        if (i == 0) {
+            game->tokenPile[0] -= (commaSplit[0][4] - '0');
+            player->tokens[0] += (commaSplit[0][4] - '0');
+        } else {
+            game->tokenPile[i] -= (commaSplit[i][0] - '0');
+            player->tokens[i] += (commaSplit[i][0] - '0');
+        }
+    }
+    return 1;
+}
 
-void process(Game *game, Player *player, char *encoded) {
-    printf("processing message from: %c\n", player->id + 'A');
+int process(Game *game, Player *player, char *encoded) {
+    // printf("processing message from: %c\n", player->id + 'A');
     if (strstr(encoded, "purchase") != NULL) {
-        process_purchase(game, player, encoded);
+        return process_purchase(game, player, encoded);
     } else if (strstr(encoded, "take") != NULL) {
-        printf("**processing take\n");   
+        printf("**processing take\n");
+        return process_take(game, player, encoded);
     } else if (strstr(encoded, "wild") != NULL) {
+        return 1;
         printf("**processing wild\n");   
     } else {
+        return 0;
         printf("protocol err\n");
     }
 }
@@ -292,19 +412,38 @@ void init_game(Game *game) {
     game->deckFaceup.amount = 0;
 }
 
+void send_all(Game *game, char *message) {
+    for (int i = 0; i < game->playerAmount; i++) {
+        send_message(game->players[i], message);
+    }
+}
+
 void play_game(Game *game) {
     init_game(game);
     draw_cards(game);
     printf("faceup: %i total: %i\n", game->deckFaceup.amount, game->deckTotal.amount);
     display_deck(game->deckFaceup);
     printf("Comm started -----\n");
-    for (int i = 0; i < game->playerAmount; i++) {
-        send_message(game->players[i], "test");
-        char *message = listen(game->players[i]);
-        process(game, &(game->players[i]), message);
-        free(message);
-        send_message(game->players[i], "exit");
+    int gameOver = 0;
+    while (!gameOver) {
+        send_all(game, "dowhat");
+        for (int i = 0; i < game->playerAmount; i++) {
+            char *message = listen(game->players[i]);
+            if (!process(game, &(game->players[i]), message)) {
+                printf("protocol err 1st\n");
+                send_message(game->players[i], "dowhat");
+                char *repromptMessage = listen(game->players[i]);
+                if (!process(game, &(game->players[i]), repromptMessage)) {
+                    printf("protocol err terminating\n");
+                    send_all(game, "eog");
+                    exit_with_error(PROTOCOL_ERR);
+                }
+            }
+            free(message);
+        }
+        gameOver = 1;
     }
+    send_all(game, "eog");
 }
 
 int main(int argc, char **argv) {
@@ -312,7 +451,6 @@ int main(int argc, char **argv) {
     Game game;
     game.deckTotal = load_deck(argv[3]);
     game.winPoints = atoi(argv[2]);
-    // 
     char **playersPaths = malloc(0);
     game.playerAmount = 0;
     for (int i = 4; i < argc; i++) {
@@ -327,7 +465,6 @@ int main(int argc, char **argv) {
     }
     game.players = setup_players(playersPaths, game.playerAmount);
     play_game(&game);
-    // printf("%i\n", game.playerAmount);
     free(playersPaths);
     free_game(game);
 }

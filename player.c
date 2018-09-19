@@ -39,22 +39,47 @@ void send_message(char *message) {
 
 char *listen(void) {
     char *message = malloc(sizeof(char) * MAX_INPUT);
-    //size_t length = (size_t) MAX_INPUT;
     if (fgets(message, MAX_INPUT, stdin) == NULL) {
-        fprintf(stderr, "comm err\n");
+        fprintf(stderr, "player comm err\n");
     }
-    fprintf(stderr, "recieved from hub: %s", message);
     return message;
+}
+
+void process_dowhat() {
+    fprintf(stderr, "---processing dowhat\n");
+    // send_message("purchase1:2,3,0,2,0");
+    send_message("take1,1,1,1");
+}
+
+void process(char *encoded) {
+    if (strstr(encoded, "dowhat") != NULL) {
+        process_dowhat();
+    } else if (strstr(encoded, "tokens") != NULL) {
+        
+    } else if (strstr(encoded, "newcard") != NULL) {
+        
+    } else if (strstr(encoded, "purchased") != NULL) {
+        
+    } else if (strstr(encoded, "took") != NULL) {
+        
+    } else if (strstr(encoded, "wild") != NULL) {
+        
+    } else if (strstr(encoded, "eog") != NULL) {
+        
+    } else {
+        fprintf(stderr, "player protocol err\n");
+    }
 }
 
 void play(char *name) {
     while (1) {
         char *message = listen();
-        send_message("purchase1:1,1,1,1,0");
-        if (strcmp(listen(), "exit\n") == 0) {
+        if (strcmp(message, "eog\n") == 0) {
             free(message);
             break;
         }
+        process(message);
+        free(message);
     }
-    fprintf(stderr, "ended\n");
+    fprintf(stderr, "player %s shutdown\n", name);
 }

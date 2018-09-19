@@ -16,7 +16,7 @@
 typedef struct {
     char colour;
     int value;
-    int discount[4];
+    int cost[4];
 } Card;
 
 typedef struct {
@@ -29,6 +29,10 @@ typedef struct {
     int id;
     FILE *input;
     FILE *output;
+    int currentDiscount[4];
+    int tokens[4];
+    int wildTokens;
+    Deck hand;
 } Player;
 
 typedef struct {
