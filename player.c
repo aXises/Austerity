@@ -47,20 +47,60 @@ char *listen(void) {
 
 void process_dowhat() {
     fprintf(stderr, "---processing dowhat\n");
-    // send_message("purchase1:2,3,0,2,0");
-    send_message("take1,1,1,1");
+    send_message("purchase1:0,0,0,0,0");
+    // send_message("take1,1,1,1");
 }
 
-// Player setup() {
-//     Player player;
-//     player.
-// }
+int process_t(char *encoded) {
+    if (strlen(encoded) < 7) {
+        return -1;
+    }
+    char *amount = malloc(0);
+    int counter = 0;
+    for (int i = 6; i < (strlen(encoded)); i++) {
+        if (i != strlen(encoded)) {
+            char *amount = realloc(amount, sizeof(char) * (i + 1));
+        }
+        amount[counter] = encoded[i];
+        counter++;
+    }
+    fprintf(stderr, "amount: %s\n", amount);
+    free(amount);
+    // if (!is_string_digit(amount[1])) {
+    //     return -1;
+    // }
+    return 0;
+}
 
-void process(char *encoded) {
+void free_game() {
+    
+}
+
+Player player_setup() {
+    Player player;
+    for (int i = 0; i < 4; i++) {
+        player.currentDiscount[i] = 0;
+        player.tokens[i] = 0;
+    }
+    player.wildTokens = 0;
+    player.hand.amount = 0;
+    player.hand.cards = malloc(0);
+    return player;
+}
+
+Game setup_game() {
+    Game game;
+    game.deckFaceup.amount = 0;
+    game.deckFaceup.cards = malloc(0);
+    return game;
+}
+    
+void process(Game *game, char *encoded) {
     if (strstr(encoded, "dowhat") != NULL) {
+        // fprintf(stderr, "----process_t: %i\n", process_t("tokens12"));
         process_dowhat();
     } else if (strstr(encoded, "tokens") != NULL) {
-        
+        // process_tokens(encoded);
     } else if (strstr(encoded, "newcard") != NULL) {
         
     } else if (strstr(encoded, "purchased") != NULL) {
@@ -77,13 +117,16 @@ void process(char *encoded) {
 }
 
 void play(char *id) {
+    Game game = setup_game();
+    //Player player = setup_player();
     while (1) {
         char *message = listen();
         if (strcmp(message, "eog\n") == 0) {
+            // fprintf(stderr, "-----%i\n", process_tokens("tokens1\n"));
             free(message);
             break;
         }
-        process(message);
+        process(&game, message);
         free(message);
     }
     fprintf(stderr, "player %s shutdown\n", id);

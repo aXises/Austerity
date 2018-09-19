@@ -32,6 +32,7 @@ typedef struct {
     int currentDiscount[4];
     int tokens[4];
     int wildTokens;
+    int points;
     Deck hand;
 } Player;
 

@@ -138,7 +138,8 @@ void free_game(Game game) {
     for (int i = 0; i < game.playerAmount; i++) {
         fclose(game.players[i].input);
         fclose(game.players[i].output);
-        free(game.players[i].hand.cards);
+        if (game.players[i].hand.amount > 0)
+            free(game.players[i].hand.cards);
     }
     free(game.players);
 }
@@ -201,6 +202,7 @@ Player *setup_players(char **playerPaths, const int amount) {
         player.id = i;
         player.wildTokens = 0;
         player.hand.amount = 0;
+        player.points = 0;
         player.hand.cards = malloc(0);
         for (int j = 0; j < 4; j++) {
             player.currentDiscount[j] = 0;
@@ -252,11 +254,21 @@ void draw_cards(Game *game) {
     }
 }
 
+char *listen(Player player) {
+    char *message = malloc(sizeof(char) * MAX_INPUT);
+    if (fgets(message, MAX_INPUT, player.output) == NULL) {
+        printf("hub err\n");
+    }
+    printf("recieved from player: %s", message);
+    return message;
+}
+
 void buy_card(Game *game, Player *player, int index) {
     Deck newDeck;
     newDeck.cards = malloc(0);
     newDeck.amount = 0;
     player->hand.cards = realloc(player->hand.cards, player->hand.amount + 1);
+    printf("==hand: %i\n", player->hand.amount);
     player->hand.cards[player->hand.amount] = game->deckFaceup.cards[index];
     player->hand.amount++;
     for (int i = 0; i < (game->deckFaceup.amount - 1); i++) {
@@ -278,28 +290,18 @@ void buy_card(Game *game, Player *player, int index) {
     game->deckFaceup.cards = newDeck.cards;
 }
 
-char *listen(Player player) {
-    char *message = malloc(sizeof(char) * MAX_INPUT);
-    if (fgets(message, MAX_INPUT, player.output) == NULL) {
-        printf("hub err\n");
-    }
-    printf("recieved from player: %s", message);
-    return message;
-}
-
 int use_tokens(Player *player, Card card, int tokens[4], int wild) {
     printf("Player %c purchased\n", player->id + 'A');
-    // for (int i = 0; i < 4; i++) {
-    //     if (player->tokens[i] < tokens[i]) {
-    //         return 0;
-    //     }
-    // }
-    int usedWild = 0;
     for (int i = 0; i < 4; i++) {
-        printf("token: %i cost: %i\n", tokens[i], card.cost[i]);
-        if (tokens[i] < card.cost[i]) {
-            int difference = card.cost[i] - tokens[i];
-
+        if (player->tokens[i] < tokens[i]) {
+            return 0;
+        }
+    }
+    int usedWild = 0, acutalPrice;
+    for (int i = 0; i < 4; i++) {
+        acutalPrice = card.cost[i] - player->currentDiscount[i];
+        if (tokens[i] < acutalPrice) {
+            int difference = acutalPrice - tokens[i];
             if (difference > (wild - usedWild)) {
                 printf("not enough %i\n", i);
                 return 0;
@@ -337,16 +339,33 @@ int process_purchase(Game *game, Player *player, char *encoded) {
     }
     int index = colSplit[0][strlen(colSplit[0]) - 1] - '0';
     int tokens[4];
+    char **commaSplit = split(colSplit[1], ",");
     for (int i = 0; i < 4; i++) {
-        tokens[i] = colSplit[1][2 * i] - '0';
+        tokens[i] = atoi(commaSplit[i]);
     }
-    int status = use_tokens(player, game->deckFaceup.cards[index], tokens,
-            colSplit[1][8]  - '0');
+    Card card = game->deckFaceup.cards[index];
+    int status = use_tokens(player, card, tokens, colSplit[1][8]  - '0');
     if (!status) {
         return 0;
     }
-    buy_card(game, player, index);
+    switch (card.colour) {
+        case('P'):
+            player->currentDiscount[0]++;
+            break;
+        case('B'):
+            player->currentDiscount[1]++;
+            break;
+        case('Y'):
+            player->currentDiscount[2]++;
+            break;
+        case('R'):
+            player->currentDiscount[3]++;
+            break;
+    }
+    player->points += card.value;
+    buy_card(game, player, 1);
     free(colSplit);
+    free(commaSplit);
     return 1;
 }
 
@@ -439,6 +458,11 @@ void play_game(Game *game) {
                 }
             }
             free(message);
+            printf("Discounts:");
+            for (int j = 0; j < 4; j++) {
+                printf("%i,", game->players[i].currentDiscount[j]);
+            }
+            printf("\n");
         }
         gameOver = 1;
     }
