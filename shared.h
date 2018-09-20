@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 #define READ 0
 #define WRITE 1
@@ -25,6 +26,7 @@ typedef struct {
 } Deck;
 
 typedef struct {
+    char *name;
     pid_t pid;
     int id;
     FILE *input;
@@ -32,6 +34,7 @@ typedef struct {
     int currentDiscount[4];
     int tokens[4];
     int wildTokens;
+    int points;
     Deck hand;
 } Player;
 
@@ -44,6 +47,7 @@ typedef struct {
     int tokenPile[4];
     int winPoints;
 } Game;
+
 
 int is_string_digit(char *);
 char **split(char *, char *);

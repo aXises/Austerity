@@ -12,6 +12,10 @@
 
 void exit_with_error(int, char *);
 void check_args(int, char **, char*);
-void play(char *);
+void play_game(char *, char *);
+void make_move(Game *, Player *, char *);
+void process(Game *, Player *, char *);
+void process_dowhat();
+void send_message(char *);
 
 #endif

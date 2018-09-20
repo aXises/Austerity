@@ -183,6 +183,7 @@ void setup_player(Player *player, char *file, const int playerAmount) {
         char playerAmountArg[2];
         playerAmountArg[0] = playerAmount + '0';
         playerAmountArg[1] = '\0';
+        // Todo handle 10+;
         char playerIdArg[2];
         playerIdArg[0] = (player->id) + '0';
         playerIdArg[1] = '\0';
@@ -201,6 +202,7 @@ Player *setup_players(char **playerPaths, const int amount) {
         player.id = i;
         player.wildTokens = 0;
         player.hand.amount = 0;
+        player.points = 0;
         player.hand.cards = malloc(0);
         for (int j = 0; j < 4; j++) {
             player.currentDiscount[j] = 0;
@@ -212,9 +214,22 @@ Player *setup_players(char **playerPaths, const int amount) {
     return players;
 }
 
-void send_message(Player player, char *message) {
-    fprintf(player.input, "%s\n", message);
+void send_message(Player player, char *message, ...) {
+    va_list args;
+    va_start(args, message);
+    vfprintf(player.input, message, args);
+    va_end(args);
     fflush(player.input);
+}
+
+void send_all(Game *game, char *message, ...) {
+    for (int i = 0; i < game->playerAmount; i++) {
+        va_list args;
+        va_start(args, message);
+        vfprintf(game->players[i].input, message, args);
+        fflush(game->players[i].input);
+        va_end(args);
+    }
 }
 
 int has_next_card(Game *game) {
@@ -256,7 +271,8 @@ void buy_card(Game *game, Player *player, int index) {
     Deck newDeck;
     newDeck.cards = malloc(0);
     newDeck.amount = 0;
-    player->hand.cards = realloc(player->hand.cards, player->hand.amount + 1);
+    player->hand.cards = realloc(player->hand.cards,
+            sizeof(Card) * (player->hand.amount + 1));
     player->hand.cards[player->hand.amount] = game->deckFaceup.cards[index];
     player->hand.amount++;
     for (int i = 0; i < (game->deckFaceup.amount - 1); i++) {
@@ -281,30 +297,27 @@ void buy_card(Game *game, Player *player, int index) {
 char *listen(Player player) {
     char *message = malloc(sizeof(char) * MAX_INPUT);
     if (fgets(message, MAX_INPUT, player.output) == NULL) {
-        printf("hub err\n");
+        printf("MESSAGE FROM PLAYER IS NULL\n");
     }
-    printf("recieved from player: %s", message);
+    // printf("recieved from player: %s", message);
     return message;
 }
 
 int use_tokens(Player *player, Card card, int tokens[4], int wild) {
-    printf("Player %c purchased\n", player->id + 'A');
-    // for (int i = 0; i < 4; i++) {
-    //     if (player->tokens[i] < tokens[i]) {
-    //         return 0;
-    //     }
-    // }
-    int usedWild = 0;
+    // printf("Player %c purchased\n", player->id + 'A');
     for (int i = 0; i < 4; i++) {
-        printf("token: %i cost: %i\n", tokens[i], card.cost[i]);
-        if (tokens[i] < card.cost[i]) {
-            int difference = card.cost[i] - tokens[i];
-
+        if (player->tokens[i] < tokens[i]) {
+            return 0;
+        }
+    }
+    int usedWild = 0, acutalPrice;
+    for (int i = 0; i < 4; i++) {
+        acutalPrice = card.cost[i] - player->currentDiscount[i];
+        if (tokens[i] < acutalPrice) {
+            int difference = acutalPrice - tokens[i];
             if (difference > (wild - usedWild)) {
-                printf("not enough %i\n", i);
                 return 0;
             } else {
-                printf("%i used, using %i on %i\n", usedWild, difference, i);
                 usedWild += difference;
             }
         }
@@ -313,7 +326,6 @@ int use_tokens(Player *player, Card card, int tokens[4], int wild) {
         player->tokens[i] -= tokens[i];
     }
     player->wildTokens -= wild;
-    printf("token: %i\n", wild);
     return 1;
 }
 
@@ -325,7 +337,6 @@ int process_purchase(Game *game, Player *player, char *encoded) {
     if (strlen(colSplit[0]) != 9 || strlen(colSplit[1]) != 10) {
         return 0;
     }
-    printf("*** %s -- %s\n", colSplit[0], colSplit[1]);
     for (int i = 0; i < 9; i++) {
         if (colSplit[1][i] != ',' && colSplit[1][i] != '\n'
                 && !isdigit(colSplit[1][i])) {
@@ -337,16 +348,34 @@ int process_purchase(Game *game, Player *player, char *encoded) {
     }
     int index = colSplit[0][strlen(colSplit[0]) - 1] - '0';
     int tokens[4];
+    char **commaSplit = split(colSplit[1], ",");
     for (int i = 0; i < 4; i++) {
-        tokens[i] = colSplit[1][2 * i] - '0';
+        tokens[i] = atoi(commaSplit[i]);
     }
-    int status = use_tokens(player, game->deckFaceup.cards[index], tokens,
-            colSplit[1][8]  - '0');
+    Card card = game->deckFaceup.cards[index];
+    free(commaSplit);
+    int status = use_tokens(player, card, tokens, colSplit[1][8]  - '0');
+    free(colSplit);
     if (!status) {
         return 0;
     }
-    buy_card(game, player, index);
-    free(colSplit);
+    switch (card.colour) {
+        case('P'):
+            player->currentDiscount[0]++;
+            break;
+        case('B'):
+            player->currentDiscount[1]++;
+            break;
+        case('Y'):
+            player->currentDiscount[2]++;
+            break;
+        case('R'):
+            player->currentDiscount[3]++;
+            break;
+    }
+    
+    player->points += card.value;
+    buy_card(game, player, 1);
     return 1;
 }
 
@@ -401,48 +430,57 @@ int process(Game *game, Player *player, char *encoded) {
         return 1;
         printf("**processing wild\n");   
     } else {
+        printf("INVALID COMM BY PLAYER\n");
         return 0;
-        printf("protocol err\n");
     }
 }
 
 void init_game(Game *game) {
     game->deckIndex = 0;
     game->deckFaceup.amount = 0;
+    draw_cards(game);
+    printf("Comm started -----\n");
+    for (int i = 0; i < game->deckFaceup.amount; i++) {
+        Card c = game->deckFaceup.cards[i];
+        send_all(game, "newcard%c:%i,%i,%i,%i,%i\n", c.colour, c.value,
+                c.cost[0], c.cost[1], c.cost[2], c.cost[3]);
+    }
+    send_all(game, "tokens%i\n", game->tokenPile[0]);
+    send_all(game, "dowhat\n");
 }
 
-void send_all(Game *game, char *message) {
-    for (int i = 0; i < game->playerAmount; i++) {
-        send_message(game->players[i], message);
-    }
-}
 
 void play_game(Game *game) {
     init_game(game);
-    draw_cards(game);
-    printf("faceup: %i total: %i\n", game->deckFaceup.amount, game->deckTotal.amount);
     display_deck(game->deckFaceup);
-    printf("Comm started -----\n");
     int gameOver = 0;
     while (!gameOver) {
-        send_all(game, "dowhat");
         for (int i = 0; i < game->playerAmount; i++) {
             char *message = listen(game->players[i]);
             if (!process(game, &(game->players[i]), message)) {
-                printf("protocol err 1st\n");
-                send_message(game->players[i], "dowhat");
-                char *repromptMessage = listen(game->players[i]);
-                if (!process(game, &(game->players[i]), repromptMessage)) {
-                    printf("protocol err terminating\n");
-                    send_all(game, "eog");
-                    exit_with_error(PROTOCOL_ERR);
-                }
+                printf("PROTOCOL ERROR 1st\n");
+                // send_all(game, "tokens%i\n", game->tokenPile[0]);
+                // char *repromptMessage = listen(game->players[i]);
+                // if (!process(game, &(game->players[i]), repromptMessage)) {
+                //     printf("PROTOCOL ERROR 2nd\n");
+                //     send_all(game, "eog\n");
+                //     free(message);
+                //     free(repromptMessage);
+                //     free_game(*game);
+                //     exit_with_error(PROTOCOL_ERR);
+                // }
+                // free(repromptMessage);
             }
             free(message);
+            // printf("Discounts:");
+            // for (int j = 0; j < 4; j++) {
+            //     printf("%i,", game->players[i].currentDiscount[j]);
+            // }
+            // printf("\n");
         }
         gameOver = 1;
     }
-    send_all(game, "eog");
+    send_all(game, "eog\n");
 }
 
 int main(int argc, char **argv) {
@@ -463,7 +501,8 @@ int main(int argc, char **argv) {
         game.tokenPile[i] = atoi(argv[1]);
     }
     game.players = setup_players(playersPaths, game.playerAmount);
+        free(playersPaths);
     play_game(&game);
-    free(playersPaths);
+
     free_game(game);
 }
