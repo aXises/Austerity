@@ -10,9 +10,14 @@
 #define INVALID_ID 3
 #define COMM_ERR 6
 
+enum argument {
+    TOTAL_PLAYERS = 0,
+    PLAYER_ID = 1,
+};
+
 void exit_with_error(int, char *);
 void check_args(int, char **, char*);
-void play_game(char *, char *);
+void play_game(char *, char *, char *);
 void make_move(Game *, Player *, char *);
 void process(Game *, Player *, char *);
 void process_dowhat(Game *, Player *);

@@ -14,6 +14,9 @@
 #define WRITE 1
 #define MAX_INPUT 256
 
+#define TRUE 1
+#define FALSE 0
+
 enum Tokens {
     PURPLE = 0,
     BLUE = 1,
@@ -55,11 +58,11 @@ typedef struct {
     int winPoints;
 } Game;
 
-
+void set_player_values(Player *);
 int is_string_digit(char *);
 char **split(char *, char *);
 void display_deck(Deck);
 int check_card(char *);
-int match_seperators(char *, int , int);
+int match_seperators(char *, const int, const int);
 
 #endif

@@ -80,11 +80,11 @@ void free_game() {
     
 }
 
-Player setup_player(char *id, char *name) {
+Player setup_player(int id, char *name) {
     Player player;
-    player.id = atoi(id);
+    player.id = id;
     player.name = name;
-    fprintf(stderr, "SETTUNG UP PLAYER %i\n", player.id);
+    // fprintf(stderr, "SETTUNG UP PLAYER %i\n", player.id);
     for (int i = 0; i < 4; i++) {
         player.currentDiscount[i] = 0;
         player.tokens[i] = 0;
@@ -130,6 +130,17 @@ int process_newcard(Game *game, char *encoded) {
     // fprintf(stderr, "checkcard res: %i\n", check_card(s[1]));
     return 1;
 }
+
+int process_took(Game *game, Player *player, char *encoded) {
+    char **details = split(encoded, "k");
+    if (strlen(details[0]) != 3 || details[1][0] > 'Z' || details[1][0] < 'A') {
+        return 0;
+    }
+    if (!match_seperators(details[1], 1, 3)) {
+        return 0;
+    }
+    return 1;
+}
     
 void process(Game *game, Player *player, char *encoded) {
     if (strstr(encoded, "dowhat") != NULL) {
@@ -152,7 +163,7 @@ void process(Game *game, Player *player, char *encoded) {
     } else if (strstr(encoded, "purchased") != NULL) {
         
     } else if (strstr(encoded, "took") != NULL) {
-        
+        fprintf(stderr, "processing took: %s\n", encoded);
     } else if (strstr(encoded, "wild") != NULL) {
         
     } else if (strstr(encoded, "eog") != NULL) {
@@ -162,12 +173,27 @@ void process(Game *game, Player *player, char *encoded) {
     }
 }
 
-void play_game(char *id, char *name) {
+Player *setup_players(const int amount) {
+    Player *players = malloc(0);
+    for (int i = 0; i < amount; i++) {
+        if (i != amount) {
+            players = realloc(players, sizeof(Player) * (i + 1));
+        }
+        Player player;
+        player.id = i;
+        set_player_values(&player);
+        players[i] = player;
+    }
+    return players;
+}
+
+void play_game(char *amount, char *id, char *name) {
     Game game = setup_game();
-    Player player = setup_player(id, name);
+    game.players = setup_players(atoi(amount));
+    Player currentPlayer = game.players[atoi(id)];
     while (1) {
         char *message = listen();
-        process(&game, &player, message);
+        process(&game, &currentPlayer, message);
         if (strcmp(message, "eog") == 0) {
             fprintf(stderr, "eog recieved\n");
             free(message);
@@ -175,7 +201,8 @@ void play_game(char *id, char *name) {
         }
         free(message);
     }
-    free(player.hand.cards);
+    free(currentPlayer.hand.cards);
     free(game.deckFaceup.cards);
+    free(game.players);
     fprintf(stderr, "player %s shutdown\n", id);
 }

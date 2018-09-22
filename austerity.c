@@ -149,13 +149,12 @@ void setup_player(Player *player, char *file, const int playerAmount) {
             exit_with_error(BAD_START);
         }
         player->pid = pid;
-        char playerAmountArg[2];
-        playerAmountArg[0] = playerAmount + '0';
-        playerAmountArg[1] = '\0';
-        // Todo handle 10+;
-        char playerIdArg[2];
-        playerIdArg[0] = (player->id) + '0';
-        playerIdArg[1] = '\0';
+        char playerAmountArg[3];
+        sprintf(playerAmountArg, "%d", playerAmount);
+        playerAmountArg[2] = '\0';
+        char playerIdArg[3];
+        sprintf(playerIdArg, "%d", player->id);
+        playerIdArg[2] = '\0';
         execlp(file, playerAmountArg, playerIdArg, NULL);
         exit_with_error(BAD_START);
     }
@@ -169,14 +168,7 @@ Player *setup_players(char **playerPaths, const int amount) {
         }
         Player player;
         player.id = i;
-        player.wildTokens = 0;
-        player.hand.amount = 0;
-        player.points = 0;
-        player.hand.cards = malloc(0);
-        for (int j = 0; j < 4; j++) {
-            player.currentDiscount[j] = 0;
-            player.tokens[j] = 0;
-        }
+        set_player_values(&player);
         setup_player(&player, playerPaths[i], amount);
         players[i] = player;
     }
@@ -350,43 +342,62 @@ int process_purchase(Game *game, Player *player, char *encoded) {
     return 1;
 }
 
-int process_take(Game *game, Player *player, char *encoded) {
-    if (!match_seperators(encoded, 0, 3)) {
+int check_take(Game *game, char *content) {
+    if (!match_seperators(content, 0, 3)) {
         return 0;
     }
-    char **commaSplit = split(encoded, ",");
-    if (strlen(commaSplit[0]) != 5) {
-        return 0;
-    }
-    for (int i = 4; i < strlen(encoded); i++) {
-        if (encoded[i] != ',' && encoded[i] != '\n'
-                && !isdigit(encoded[i])) {
+    for (int i = 1; i < strlen(content); i++) {
+        if (content[i] != ',' && content[i] != '\n'
+                && !isdigit(content[i])) {
             return 0;
         }
     }
+    char *contentCopy = malloc(sizeof(char) * (strlen(content) + 1));
+    strcpy(contentCopy, content);
+    char **commaSplit = split(contentCopy, ",");
     for (int i = 0; i < 4; i++) {
-        if (i == 0) {
-            // printf("encoded: %c\n", commaSplit[0][4]);
-            if ((commaSplit[0][4] - '0') > game->tokenPile[0]) {
-                return 0;
-            }
-        } else {
-            // printf("encoded: %c\n", commaSplit[i][0]);
-            if ((commaSplit[i][0] - '0') > game->tokenPile[i]) {
-                return 0;
-            }
-        }
-    }
-    for (int i = 0; i < 4; i++) {
-        if (i == 0) {
-            game->tokenPile[0] -= (commaSplit[0][4] - '0');
-            player->tokens[0] += (commaSplit[0][4] - '0');
-        } else {
-            game->tokenPile[i] -= (commaSplit[i][0] - '0');
-            player->tokens[i] += (commaSplit[i][0] - '0');
+        if (strcmp(commaSplit[i], "") == 0 || atoi(commaSplit[i]) > game->tokenPile[i]) {
+            free(commaSplit);
+            free(contentCopy);
+            return 0;
         }
     }
     free(commaSplit);
+    free(contentCopy);
+    return 1;
+}
+
+int process_take(Game *game, Player *player, char *encoded) {
+    char **takeDetails = split(encoded, "e");
+    if (strcmp(takeDetails[0], "tak") != 0 || !check_take(game, takeDetails[1])) {
+        free(takeDetails);
+        return 0;
+    }
+    char **commaSplit = split(takeDetails[1], ",");
+    int tokenPurple = 0, tokenBlue = 0, tokenYellow = 0, tokenRed = 0;
+    for (int i = 0; i < 4; i++) {
+        game->tokenPile[i] -= atoi(commaSplit[i]);
+        player->tokens[i] += atoi(commaSplit[i]);
+        switch (i) {
+            case (PURPLE):
+                tokenPurple = atoi(commaSplit[i]);
+                break;
+            case (BLUE):
+                tokenBlue = atoi(commaSplit[i]);
+                break;
+            case (YELLOW):
+                tokenYellow = atoi(commaSplit[i]);
+                break;
+            case (RED):
+                tokenRed = atoi(commaSplit[i]);
+                break;
+        }
+    }
+    free(commaSplit);
+    free(takeDetails);
+    printf("reach here took%c:%i,%i,%i,%i\n", player->id + 'A', tokenPurple, tokenBlue, tokenYellow, tokenRed);
+    send_all(game, "took%c:%i,%i,%i,%i\n", player->id + 'A',
+            tokenPurple, tokenBlue, tokenYellow, tokenRed);
     return 1;
 }
 
@@ -395,8 +406,9 @@ int process(Game *game, Player *player, char *encoded) {
     if (strstr(encoded, "purchase") != NULL) {
         return process_purchase(game, player, encoded);
     } else if (strstr(encoded, "take") != NULL) {
-        // printf("**processing take\n");
-        return process_take(game, player, encoded);
+        // printf("processing %s from: %c\n", encoded, player->id + 'A');
+        // printf("**processing take: %i\n", x);
+        return process_take(game, player, encoded);;
     } else if (strstr(encoded, "wild") != NULL) {
         printf("**processing wild: %s\n", encoded);   
         return 1;
@@ -411,12 +423,12 @@ void init_game(Game *game) {
     game->deckFaceup.amount = 0;
     draw_cards(game);
     printf("Comm started -----\n");
+    send_all(game, "tokens%i\n", game->tokenPile[PURPLE]);
     for (int i = 0; i < game->deckFaceup.amount; i++) {
         Card c = game->deckFaceup.cards[i];
         send_all(game, "newcard%c:%i:%i,%i,%i,%i\n", c.colour, c.value,
                 c.cost[0], c.cost[1], c.cost[2], c.cost[3]);
     }
-    send_all(game, "tokens%i\n", game->tokenPile[PURPLE]);
     send_all(game, "dowhat\n");
 }
 

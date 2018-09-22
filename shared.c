@@ -1,5 +1,18 @@
 #include "shared.h"
 
+void set_player_values(Player *player) {
+    player->wildTokens = 0;
+    player->hand.amount = 0;
+    player->points = 0;
+    player->hand.cards = malloc(0);
+    for (int i = 0; i < 4; i++) {
+        player->currentDiscount[i] = 0;
+        player->tokens[i] = 0;
+    }
+}
+    
+
+
 int is_string_digit(char *string) {
     for (int i = 0; i < strlen(string); i++) {
         if (!isdigit(string[i])) {
@@ -46,7 +59,8 @@ int check_card(char *content) {
     return 1;
 }
 
-int match_seperators(char *str, int expectedColumn, int expectedComma) {
+int match_seperators(char *str, const int expectedColumn,
+        const int expectedComma) {
     int colAmount = 0, commaAmount = 0;
     for (int i = 0; i < (strlen(str) - 1); i++) {
         switch(str[i]) {

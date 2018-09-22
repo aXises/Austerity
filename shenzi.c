@@ -2,9 +2,9 @@
 #define PLAYER_NAME "shenzi"
 
 int main(int argc, char **argv) {
-    check_args(argc, argv, PLAYER_NAME);
     // fprintf(stderr, "argc: %i, argv0: %s, argv1: %s\n", argc, argv[0], argv[1]);
-    play_game(argv[1], PLAYER_NAME);
+    check_args(argc, argv, PLAYER_NAME);
+    play_game(argv[TOTAL_PLAYERS], argv[PLAYER_ID], PLAYER_NAME);
 }
 
 int largest_value(Deck deck) {
@@ -63,7 +63,7 @@ Deck affordable_cards(Deck deck, Player *player) {
 }
 
 int attempt_purchase(Game *game, Player *player) {
-    fprintf(stderr, "Player 0 ===\n");
+    // fprintf(stderr, "Player 0 ===\n");
     Deck deck = affordable_cards(game->deckFaceup, player);
     if (deck.amount == 0) {
         free(deck.cards);
@@ -97,16 +97,33 @@ int attempt_take_tokens(Game *game, Player *player) {
         return 0;
     }
     int tokenTakenTotal = 0;
+    int tokenPurple = 0, tokenBlue = 0, tokenYellow = 0, tokenRed = 0;
     for (int i = 0; i < 4; i++) {
-        if (tokenTakenTotal > 3) {
+        if (tokenTakenTotal > 2) {
             break;
         }
         if (game->tokenPile[i] > 0) {
             player->tokens[i]++;
             game->tokenPile[i]--;
             tokenTakenTotal++;
+            switch (i) {
+                case (PURPLE):
+                    tokenPurple = 1;
+                    break;
+                case (BLUE):
+                    tokenBlue = 1;
+                    break;
+                case (YELLOW):
+                    tokenYellow = 1;
+                    break;
+                case (RED):
+                    tokenRed = 1;
+                    break;
+            }
         }
     }
+    send_message("take%i,%i,%i,%i\n",
+            tokenPurple, tokenBlue, tokenYellow, tokenRed);
     return 1;
 }
 
@@ -116,16 +133,17 @@ void take_wild(Game *game, Player *player) {
 }
 
 void process_dowhat(Game *game, Player *player) {
-    fprintf(stderr, "---processing dowhat by %s\n", PLAYER_NAME);
+    // fprintf(stderr, "---processing dowhat by %s\n", PLAYER_NAME);
     // send_message("purchase1:0,0,0,0,0");
     // if (player->id == 0) {
         if (!attempt_purchase(game, player)) {
-            fprintf(stderr, "%i cannot purchase\n", player->id);
+            //fprintf(stderr, "%i cannot purchase\n", player->id);
             if (!attempt_take_tokens(game, player)) {
-                fprintf(stderr, "%i cannot take tokens\n", player->id);
+               // fprintf(stderr, "%i cannot take tokens\n", player->id);
                 take_wild(game, player);
                 return;
             } else {
+            //    fprintf(stderr, "%i, can take tok\n", player->id);
                 return;
             }
         } else {
