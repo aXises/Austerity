@@ -94,10 +94,16 @@ Deck load_deck(char *fileName) {
 }
 
 void free_game(Game game) {
-    if (game.deckFaceup.amount > 0) {
+    if (game.deckTotal.amount < 8) {
         free(game.deckTotal.cards);
+    } else {
+        if (game.deckTotal.amount > 0) {
+            free(game.deckTotal.cards);
+        }
+        if (game.deckFaceup.amount > 0) {
+            free(game.deckFaceup.cards);
+        }
     }
-    free(game.deckFaceup.cards);
     for (int i = 0; i < game.playerAmount; i++) {
         fclose(game.players[i].input);
         fclose(game.players[i].output);
