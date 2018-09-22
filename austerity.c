@@ -13,29 +13,29 @@ void check_args(int argc, char **argv) {
 
 void exit_with_error(int error) {
     switch(error) {
-        case(WRONG_ARG_NUM):
+        case (WRONG_ARG_NUM):
             fprintf(stderr, "Usage: austerity tokens points deck player "\
                     "player [player ...]\n");
             break;
-        case(BAD_ARG):
+        case (BAD_ARG):
             fprintf(stderr, "Bad argument\n");
             break;
-        case(CANNOT_ACCESS_DECK_FILE):
+        case (CANNOT_ACCESS_DECK_FILE):
             fprintf(stderr, "Cannot access deck file\n");
             break;
-        case(INVALID_DECK_FILE):
+        case (INVALID_DECK_FILE):
             fprintf(stderr, "Invalid deck file contents\n");
             break;
-        case(BAD_START):
+        case (BAD_START):
             fprintf(stderr, "Bad start\n");
             break;
-        case(CLIENT_DISCONNECT):
+        case (CLIENT_DISCONNECT):
             fprintf(stderr, "Client disconnected\n");
             break;
-        case(PROTOCOL_ERR):
+        case (PROTOCOL_ERR):
             fprintf(stderr, "Protocol error by client\n");
             break;
-        case(SIGINT_RECIEVED):
+        case (SIGINT_RECIEVED):
             fprintf(stderr, "SIGINT caught\n");
             break;
     }
@@ -325,22 +325,22 @@ int process_purchase(Game *game, Player *player, char *encoded) {
     }
     Card card = game->deckFaceup.cards[index];
     free(commaSplit);
-    int status = use_tokens(player, card, tokens, colSplit[1][8]  - '0');
+    int status = use_tokens(player, card, tokens, colSplit[1][8] - '0');
     free(colSplit);
     if (!status) {
         return 0;
     }
     switch (card.colour) {
-        case('P'):
+        case ('P'):
             player->currentDiscount[PURPLE]++;
             break;
-        case('B'):
+        case ('B'):
             player->currentDiscount[BLUE]++;
             break;
-        case('Y'):
+        case ('Y'):
             player->currentDiscount[YELLOW]++;
             break;
-        case('R'):
+        case ('R'):
             player->currentDiscount[RED]++;
             break;
     }

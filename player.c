@@ -2,16 +2,16 @@
 
 void exit_with_error(int error, char *name) {
     switch(error) {
-        case(WRONG_ARG_NUM):
+        case (WRONG_ARG_NUM):
             fprintf(stderr, "Usage: %s pcount myid\n", name);
             break;
-        case(INVALID_PLAYER_COUNT):
+        case (INVALID_PLAYER_COUNT):
             fprintf(stderr, "Invalid player count\n");
             break;
-        case(INVALID_ID):
+        case (INVALID_ID):
             fprintf(stderr, "Invalid player ID\n");
             break;
-        case(COMM_ERR):
+        case (COMM_ERR):
             fprintf(stderr, "Communication Error\n");
             break;
         default:

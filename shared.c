@@ -50,10 +50,10 @@ int match_seperators(char *str, int expectedColumn, int expectedComma) {
     int colAmount = 0, commaAmount = 0;
     for (int i = 0; i < (strlen(str) - 1); i++) {
         switch(str[i]) {
-            case(':'):
+            case (':'):
                 colAmount++;
                 break;
-            case(','):
+            case (','):
                 commaAmount++;
                 break;
         }
