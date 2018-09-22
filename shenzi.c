@@ -98,7 +98,7 @@ int attempt_take_tokens(Game *game, Player *player) {
     }
     int tokenTakenTotal = 0;
     for (int i = 0; i < 4; i++) {
-        if (tokenTaken > 3) {
+        if (tokenTakenTotal > 3) {
             break;
         }
         if (game->tokenPile[i] > 0) {

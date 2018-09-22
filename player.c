@@ -134,7 +134,6 @@ int process_newcard(Game *game, char *encoded) {
 void process(Game *game, Player *player, char *encoded) {
     if (strstr(encoded, "dowhat") != NULL) {
         process_dowhat(game, player);
-        fprintf(stderr, "test---\n");
         send_message("wild\n");
     } else if (strstr(encoded, "tokens") != NULL) {
         //fprintf(stderr, "process %s\n", encoded);
