@@ -14,10 +14,17 @@
 #define WRITE 1
 #define MAX_INPUT 256
 
+enum Tokens {
+    PURPLE = 0,
+    BLUE = 1,
+    YELLOW = 2,
+    RED = 3
+};
+
 typedef struct {
     char colour;
     int value;
-    int cost[4];
+    int cost[4]; // P, B, Y, R
 } Card;
 
 typedef struct {
@@ -31,8 +38,8 @@ typedef struct {
     int id;
     FILE *input;
     FILE *output;
-    int currentDiscount[4];
-    int tokens[4];
+    int currentDiscount[4]; // P, B, Y, R
+    int tokens[4]; // P, B, Y, R
     int wildTokens;
     int points;
     Deck hand;
@@ -44,12 +51,15 @@ typedef struct {
     Deck deckTotal;
     Deck deckFaceup;
     int deckIndex;
-    int tokenPile[4];
+    int tokenPile[4]; // P, B, Y, R
     int winPoints;
 } Game;
 
 
 int is_string_digit(char *);
 char **split(char *, char *);
+void display_deck(Deck);
+int check_card(char *);
+int match_seperators(char *, int , int);
 
 #endif

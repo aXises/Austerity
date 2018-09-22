@@ -14,10 +14,11 @@
 #define PROTOCOL_ERR 7
 #define SIGINT_RECIEVED 10
 
-#define PURPLE 0
-#define BLUE 1
-#define YELLOW 2
-#define RED 3
+enum argument {
+    TOKENS = 1,
+    WIN_POINTS = 2,
+    DECK_FILE = 3
+};
 
 /**
  * Function Prototypes

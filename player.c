@@ -32,8 +32,11 @@ void check_args(int argc, char **argv, char *name) {
     }
 }
 
-void send_message(char *message) {
-    printf("%s\n", message);
+void send_message(char *message, ...) {
+    va_list args;
+    va_start(args, message);
+    vprintf(message, args);
+    va_end(args);
     fflush(stdout);
 }
 
@@ -49,7 +52,6 @@ char *listen(void) {
 }
 
 int process_tokens(char *encoded) {
-    
     if (strlen(encoded) < 7) {
         return -1;
     }
@@ -62,6 +64,7 @@ int process_tokens(char *encoded) {
         amount[counter] = encoded[i];
         counter++;
     }
+    amount = realloc(amount, sizeof(char) * (counter + 1));
     amount[counter] = '\0';
     if (!is_string_digit(amount)) {
         free(amount);
@@ -99,18 +102,44 @@ Game setup_game() {
     return game;
 }
 
-void process_newcard(Game *game, char *encoded) {
-    // fprintf(stderr, "prcessing new card %s\n", encoded);
+int process_newcard(Game *game, char *encoded) {
+    char **cardDetails = split(encoded, "d");
+    if (strcmp(cardDetails[0], "newcar") != 0 || !check_card(cardDetails[1])) {
+        fprintf(stderr, "check card err\n");
+        return 0;
+    }
+    // fprintf(stderr, "str1: %s str2: %s\n", cardDetails[0], cardDetails[1]);
+    game->deckFaceup.cards = realloc(game->deckFaceup.cards,
+            sizeof(Card) * (game->deckFaceup.amount + 1));
+    char **columnSplit = split(cardDetails[1], ":");
+    char **commaSplit = split(columnSplit[2], ",");
+    Card card;
+    card.colour = columnSplit[0][0];
+    card.value = atoi(columnSplit[1]);
+    for (int i = 0; i < 4; i++) {
+        if (strcmp(commaSplit[i], "") == 0) {
+            return 0;
+        }
+        card.cost[i] = atoi(commaSplit[i]);
+    }
+    game->deckFaceup.cards[game->deckFaceup.amount] = card;
+    game->deckFaceup.amount++;
+    free(columnSplit);
+    free(commaSplit);
+    free(cardDetails);
+    // fprintf(stderr, "checkcard res: %i\n", check_card(s[1]));
+    return 1;
 }
     
 void process(Game *game, Player *player, char *encoded) {
-    // fprintf(stderr, "process %s\n", encoded);
     if (strstr(encoded, "dowhat") != NULL) {
-        process_dowhat();
+        process_dowhat(game, player);
+        fprintf(stderr, "test---\n");
+        send_message("wild\n");
     } else if (strstr(encoded, "tokens") != NULL) {
-        fprintf(stderr, "process %s\n", encoded);
+        //fprintf(stderr, "process %s\n", encoded);
         int tokens = process_tokens(encoded);
-        fprintf(stderr, "processed %i, tokens \n", tokens);
+        // fprintf(stderr, "processed %i, tokens \n", tokens);
         if (tokens == -1) {
             exit_with_error(COMM_ERR, player->name);
         } else {
@@ -118,7 +147,7 @@ void process(Game *game, Player *player, char *encoded) {
                 game->tokenPile[i] = tokens;
             }
         }
-        fprintf(stderr, "player: %i\n", game->tokenPile[0]);
+        // fprintf(stderr, "player game tokens: %i\n", game->tokenPile[0]);
     } else if (strstr(encoded, "newcard") != NULL) {
         process_newcard(game, encoded);
     } else if (strstr(encoded, "purchased") != NULL) {
@@ -139,7 +168,7 @@ void play_game(char *id, char *name) {
     Player player = setup_player(id, name);
     while (1) {
         char *message = listen();
-        make_move(&game, &player, message);
+        process(&game, &player, message);
         if (strcmp(message, "eog") == 0) {
             fprintf(stderr, "eog recieved\n");
             free(message);
@@ -147,5 +176,7 @@ void play_game(char *id, char *name) {
         }
         free(message);
     }
+    free(player.hand.cards);
+    free(game.deckFaceup.cards);
     fprintf(stderr, "player %s shutdown\n", id);
 }
