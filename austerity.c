@@ -417,11 +417,11 @@ int process_purchase(Game *game, Player *player, char *encoded) {
     }
     update_discount(card.colour, player);
     player->points += card.value;
-    buy_card(game, player, index);
-    //printf("tokens: %i %i %i %i\n", game->tokenPile[0], game->tokenPile[1], game->tokenPile[2], game->tokenPile[3]);
     printf("Player %c purchased %i using %i,%i,%i,%i,%i\n", player->id + 'A',
             index, tokens[PURPLE], tokens[BLUE], tokens[YELLOW], tokens[RED],
             tokens[WILD]);
+    buy_card(game, player, index);
+    //printf("tokens: %i %i %i %i\n", game->tokenPile[0], game->tokenPile[1], game->tokenPile[2], game->tokenPile[3]);
     send_all(game, "purchased%c:%i:%i,%i,%i,%i,%i\n", player->id + 'A', index,
             tokens[PURPLE], tokens[BLUE], tokens[YELLOW], tokens[RED], 
                 tokens[WILD]);
@@ -569,6 +569,7 @@ int main(int argc, char **argv) {
     char **playersPaths = malloc(0);
     game.playerAmount = 0;
     game.deckFaceup.amount = 0;
+    game.deckIndex = 0;
     for (int i = 4; i < argc; i++) {
         if (i != argc) {
             playersPaths = realloc(playersPaths, sizeof(char *) * (i - 3));
