@@ -105,9 +105,15 @@ int attempt_purchase(Game *game, Player *player) {
     // fprintf(stderr, "potenital cards: \n");
     // display_deck(d);
     //fprintf(stderr, "before cost card player %i tokens: %i %i %i %i\n", player->id, player->tokens[0], player->tokens[1], player->tokens[2], player->tokens[3]);
+    int index = 8;
+    for (int i = 0; i < d.amount; i++) {
+        int cardIndex = index_of_card(game->deckFaceup, d.cards[i], TRUE);
+        if (cardIndex < index) {
+            index = cardIndex;
+        }
+    }
     int cost[5];
-    cost_of_card(d.cards[d.amount - 1], player, cost);
-    int index = index_of_card(game->deckFaceup, d.cards[d.amount - 1], TRUE);
+    cost_of_card(game->deckFaceup.cards[index], player, cost);
     //fprintf(stderr, "cost:%i %i %i %i %i", cost[0], cost[1], cost[2], cost[3], cost[4]);
     // fprintf(stderr, "%i player has %i\n", player->id, player->tokens[0]);
     // display_deck(game->deckFaceup);
