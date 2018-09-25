@@ -1,6 +1,9 @@
 #ifndef AUSTERITY_H
 #define AUSTERITY_H
 
+#include <unistd.h>
+#include <fcntl.h>
+
 #include "shared.h"
 #include "util.h"
 

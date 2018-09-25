@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdarg.h>
@@ -21,7 +20,8 @@ enum Tokens {
     PURPLE = 0,
     BLUE = 1,
     YELLOW = 2,
-    RED = 3
+    RED = 3,
+    WILD = 4
 };
 
 typedef struct {
@@ -58,11 +58,15 @@ typedef struct {
     int winPoints;
 } Game;
 
+int index_of_card(Deck, Card, int);
 void set_player_values(Player *);
 int is_string_digit(char *);
 char **split(char *, char *);
 void display_deck(Deck);
 int check_card(char *);
 int match_seperators(char *, const int, const int);
+void update_discount(char, Player *);
+int get_highest_points(Game);
+void get_winners(Game, int, int);
 
 #endif

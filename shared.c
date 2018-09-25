@@ -1,17 +1,33 @@
 #include "shared.h"
 
+int index_of_card(Deck deck, Card card, int first) {
+    int index = -1;
+    for (int i = 0; i < deck.amount; i++) {
+        Card c = deck.cards[i];
+        if (c.colour == card.colour && c.value == card.value
+                && c.cost[PURPLE] == card.cost[PURPLE]
+                && c.cost[BLUE] == card.cost[BLUE]
+                && c.cost[YELLOW] == card.cost[YELLOW]
+                && c.cost[RED] == card.cost[RED]) {
+            index = i;
+            if (first) {
+                break;
+            }
+        }
+
+    }
+    return index;
+}
+
 void set_player_values(Player *player) {
     player->wildTokens = 0;
     player->hand.amount = 0;
     player->points = 0;
-    player->hand.cards = malloc(0);
     for (int i = 0; i < 4; i++) {
         player->currentDiscount[i] = 0;
         player->tokens[i] = 0;
     }
 }
-    
-
 
 int is_string_digit(char *string) {
     for (int i = 0; i < strlen(string); i++) {
@@ -62,7 +78,7 @@ int check_card(char *content) {
 int match_seperators(char *str, const int expectedColumn,
         const int expectedComma) {
     int colAmount = 0, commaAmount = 0;
-    for (int i = 0; i < (strlen(str) - 1); i++) {
+    for (int i = 0; i < strlen(str); i++) {
         switch(str[i]) {
             case (':'):
                 colAmount++;
@@ -73,4 +89,68 @@ int match_seperators(char *str, const int expectedColumn,
         }
     }
     return colAmount == expectedColumn && commaAmount == expectedComma; 
+}
+
+void update_discount(char colour, Player *player) {
+    switch (colour) {
+        case ('P'):
+            player->currentDiscount[PURPLE]++;
+            break;
+        case ('B'):
+            player->currentDiscount[BLUE]++;
+            break;
+        case ('Y'):
+            player->currentDiscount[YELLOW]++;
+            break;
+        case ('R'):
+            player->currentDiscount[RED]++;
+            break;
+    }
+}
+
+int get_highest_points(Game game) {
+    int highestPoint = 0;
+    for (int i = 0; i < game.playerAmount; i++) {
+        if (game.players[i].points >= highestPoint) {
+            highestPoint = game.players[i].points;
+        }
+    }
+    return highestPoint;
+}
+
+void get_winners(Game game, int points, int isHub) {
+    Player *winners = malloc(0);
+    int counter = 0;
+    for (int i = 0; i < game.playerAmount; i++) {
+        if (game.players[i].points == points) {
+            winners = realloc(winners, sizeof(Player) * (counter + 1));
+            winners[i] = game.players[i];
+            counter++;
+        }
+    }
+    if (isHub) {
+        printf("Winner(s) ");
+    } else {
+        fprintf(stderr, "Game over. Winners are ");
+    }
+    for (int i = 0; i < counter; i++) {
+        if (isHub) {
+            printf("%c", winners[i].id + 'A');
+        } else {
+            fprintf(stderr, "%c", winners[i].id + 'A');
+        }
+        if (i != counter - 1) {
+            if (isHub) {
+                printf(",");
+            } else {
+                fprintf(stderr, ",");
+            }
+        }
+    }
+    if (isHub) {
+        printf("\n");
+    } else {
+        fprintf(stderr, "\n");
+    }
+    free(winners);
 }
