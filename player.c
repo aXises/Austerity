@@ -284,11 +284,12 @@ void play_game(char *amount, char *id, char *name) {
         char *message = listen();
         if (strcmp(message, "eog") == 0) {
             free(message);
-            get_winners(game, get_highest_points(game), FALSE);
+            get_winners(&game, get_highest_points(game), FALSE);
             break;
         }
         if (!process(&game, &game.players[atoi(id)], message)) {
-            // free stuff
+            free(game.deckFaceup.cards);
+            free(game.players);
             free(message);
             break;
         };

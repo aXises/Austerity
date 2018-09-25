@@ -67,6 +67,6 @@ int check_card(char *);
 int match_seperators(char *, const int, const int);
 void update_discount(char, Player *);
 int get_highest_points(Game);
-void get_winners(Game, int, int);
+void get_winners(Game *, int, int);
 
 #endif

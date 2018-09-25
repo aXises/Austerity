@@ -118,13 +118,13 @@ int get_highest_points(Game game) {
     return highestPoint;
 }
 
-void get_winners(Game game, int points, int isHub) {
+void get_winners(Game *game, int points, int isHub) {
     Player *winners = malloc(0);
     int counter = 0;
-    for (int i = 0; i < game.playerAmount; i++) {
-        if (game.players[i].points == points) {
+    for (int i = 0; i < game->playerAmount; i++) {
+        if (game->players[i].points == points) {
             winners = realloc(winners, sizeof(Player) * (counter + 1));
-            winners[i] = game.players[i];
+            winners[i] = game->players[i];
             counter++;
         }
     }
