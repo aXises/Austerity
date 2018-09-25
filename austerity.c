@@ -502,7 +502,6 @@ void play_game(Game *game) {
 int main(int argc, char **argv) {
     check_args(argc, argv);
     Game game;
-    game.deckTotal = load_deck(argv[DECK_FILE]);
     game.winPoints = atoi(argv[WIN_POINTS]);
     for (int i = 0; i < 4; i++) {
         game.tokenPile[i] = atoi(argv[TOKENS]);
@@ -518,6 +517,7 @@ int main(int argc, char **argv) {
     }
     game.players = setup_players(playersPaths, game.playerAmount);
     free(playersPaths);
+    game.deckTotal = load_deck(argv[DECK_FILE]);
     play_game(&game);
     free_game(game);
 }

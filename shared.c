@@ -124,7 +124,7 @@ void get_winners(Game *game, int points, int isHub) {
     for (int i = 0; i < game->playerAmount; i++) {
         if (game->players[i].points == points) {
             winners = realloc(winners, sizeof(Player) * (counter + 1));
-            winners[i] = game->players[i];
+            winners[counter] = game->players[i];
             counter++;
         }
     }
