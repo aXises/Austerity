@@ -100,12 +100,14 @@ int attempt_purchase(Game *game, Player *player) {
     //fprintf(stderr, "can afford %i cards\n", deck.amount);
     //display_deck(deck);
     Deck d = get_card_by_value(deck, largest_value(deck));
-    //fprintf(stderr, "potenital cards: \n");
-    //display_deck(d);
+    // fprintf(stderr, "total cards: \n");
+    // display_deck(game->deckFaceup);
+    // fprintf(stderr, "potenital cards: \n");
+    // display_deck(d);
     //fprintf(stderr, "before cost card player %i tokens: %i %i %i %i\n", player->id, player->tokens[0], player->tokens[1], player->tokens[2], player->tokens[3]);
     int cost[5];
-    cost_of_card(d.cards[0], player, cost);
-    int index = index_of_card(game->deckFaceup, d.cards[0], TRUE);
+    cost_of_card(d.cards[d.amount - 1], player, cost);
+    int index = index_of_card(game->deckFaceup, d.cards[d.amount - 1], TRUE);
     //fprintf(stderr, "cost:%i %i %i %i %i", cost[0], cost[1], cost[2], cost[3], cost[4]);
     // fprintf(stderr, "%i player has %i\n", player->id, player->tokens[0]);
     // display_deck(game->deckFaceup);
