@@ -271,7 +271,7 @@ int has_next_card(Game *game) {
 }
 
 void display_card(Card c) {
-    printf("New Card = Bonus %c, worth %i, costs %i,%i,%i,%i\n", c.colour, 
+    printf("New card = Bonus %c, worth %i, costs %i,%i,%i,%i\n", c.colour, 
             c.value, c.cost[PURPLE], c.cost[BLUE],
             c.cost[YELLOW], c.cost[RED]);
 }
