@@ -114,31 +114,32 @@ Deck load_deck(char *fileName) {
     content = realloc(content, sizeof(char) * (counter + 1));
     content[counter] = '\0';
     char **cardArr = split(content, "\n");
-    if (cardArr[0][0]);
     Deck deck;
     deck.amount = cards + 1;
     deck.cards = malloc(sizeof(Card) * deck.amount);
     for (int i = 0; i < deck.amount; i++) {
-        if (!check_card(cardArr[i])) {
-            exit_with_error(NULL, INVALID_DECK_FILE);
-        }
-        char **colSplit = split(cardArr[i], ":");
-        Card card;
-        if (strcmp(colSplit[1], "") == 0) {
-            exit_with_error(NULL, INVALID_DECK_FILE); 
-        }
-        card.colour = colSplit[0][0];
-        card.value = atoi(colSplit[1]);
-        char **commaSplit = split(colSplit[2], ",");
-        for (int j = 0; j < 4; j++) {
-            if (strcmp(commaSplit[j], "") == 0) {
+        if (i != deck.amount - 1 || strcmp(cardArr[i], "") != 0) {
+            if (!check_card(cardArr[i])) {
+                exit_with_error(NULL, INVALID_DECK_FILE);
+            }
+            char **colSplit = split(cardArr[i], ":");
+            Card card;
+            if (strcmp(colSplit[1], "") == 0) {
                 exit_with_error(NULL, INVALID_DECK_FILE); 
             }
-            card.cost[j] = atoi(commaSplit[j]);
+            card.colour = colSplit[0][0];
+            card.value = atoi(colSplit[1]);
+            char **commaSplit = split(colSplit[2], ",");
+            for (int j = 0; j < 4; j++) {
+                if (strcmp(commaSplit[j], "") == 0) {
+                    exit_with_error(NULL, INVALID_DECK_FILE); 
+                }
+                card.cost[j] = atoi(commaSplit[j]);
+            }
+            deck.cards[i] = card;
+            free(colSplit);
+            free(commaSplit);
         }
-        deck.cards[i] = card;
-        free(colSplit);
-        free(commaSplit);
     }
     free(content);
     free(cardArr);
