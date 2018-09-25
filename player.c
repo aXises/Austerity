@@ -24,11 +24,20 @@ void check_args(int argc, char **argv, char *name) {
     if (argc < 3) {
         exit_with_error(WRONG_ARG_NUM, name);
     }
-    if (!is_string_digit(argv[0])) {
-        exit_with_error(INVALID_PLAYER_COUNT, name);
-    }
-    if (!is_string_digit(argv[1])) {
-        exit_with_error(INVALID_ID, name);
+    if (argc == 2) {
+        if (!is_string_digit(argv[0])) {
+            exit_with_error(INVALID_PLAYER_COUNT, name);
+        }
+        if (!is_string_digit(argv[1])) {
+            exit_with_error(INVALID_ID, name);
+        }
+    } else {
+        if (!is_string_digit(argv[1])) {
+            exit_with_error(INVALID_PLAYER_COUNT, name);
+        }
+        if (!is_string_digit(argv[2])) {
+            exit_with_error(INVALID_ID, name);
+        }
     }
 }
 
