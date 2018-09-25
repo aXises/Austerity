@@ -21,7 +21,7 @@ void exit_with_error(int error, char *name) {
 }
 
 void check_args(int argc, char **argv, char *name) {
-    if (argc != 2) {
+    if (argc < 3) {
         exit_with_error(WRONG_ARG_NUM, name);
     }
     if (!is_string_digit(argv[0])) {

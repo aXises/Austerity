@@ -57,7 +57,7 @@ void check_args(int argc, char **argv) {
 void exit_with_error(Game *game, int error) {
     if (game != NULL) {
         if (error == BAD_START) {
-            kill_children(game);
+            // kill_children(game);
         }
         // if (error > 4) {
         //     wait_children(game);
