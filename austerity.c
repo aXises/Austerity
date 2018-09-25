@@ -7,11 +7,11 @@ void free_game(Game *game) {
         if (game->deckTotal.amount > 0) {
             free(game->deckTotal.cards);
         }
-        if (game->deckFaceup.amount >= 0) {
+        if (game->deckFaceup.amount > 0) {
             free(game->deckFaceup.cards);
         }
     }
-    for (int i = 0; i < game->playerAmount; i++) {
+    for (int i = 0; i < game->playerAmount - 1; i++) {
         fclose(game->players[i].input);
         fclose(game->players[i].output);
     }
@@ -19,7 +19,7 @@ void free_game(Game *game) {
 }
 
 void kill_children(Game *game) {
-    for (int i = 0; i < game->playerAmount + 1; i++) {
+    for (int i = 0; i < game->playerAmount; i++) {
         if (game->players[i].pid != 0) {
             kill(game->players[i].pid, SIGKILL);
         }
@@ -59,10 +59,10 @@ void exit_with_error(Game *game, int error) {
         if (error == BAD_START) {
             kill_children(game);
         }
-        if (error > 4) {
-            wait_children(game);
-        }
-        free_game(game);
+        // if (error > 4) {
+        //     wait_children(game);
+        // }
+        // free_game(game);
     }
     switch(error) {
         case (WRONG_ARG_NUM):
@@ -145,20 +145,19 @@ Deck load_deck(char *fileName) {
     return deck;
 }
 
-void setup_parent(Game *game, Player *player, int input[2],
+void setup_parent(Game *game, int id, int input[2],
         int output[2], int test[2]) {
     if (close(input[READ]) == -1 || close(output[WRITE]) == -1 ||
             close(test[WRITE]) == -1) {
         exit_with_error(game, BAD_START);
     }
-    player->input = fdopen(input[WRITE], "w");
-    player->output = fdopen(output[READ], "r");
+    game->players[id].input = fdopen(input[WRITE], "w");
+    game->players[id].output = fdopen(output[READ], "r");
     FILE *testPipe = fdopen(test[READ], "r");
-    if (player->input == NULL || player->output == NULL ||
-        testPipe == NULL) {
+    if (game->players[id].input == NULL ||
+            game->players[id].output == NULL || testPipe == NULL) {
         exit_with_error(game, BAD_START);
     }
-
     char *message = malloc(sizeof(char) * MAX_INPUT);
     if (fgets(message, MAX_INPUT, testPipe) != NULL) {
         fclose(testPipe);
@@ -169,8 +168,8 @@ void setup_parent(Game *game, Player *player, int input[2],
     free(message);
 }
 
-void setup_child(Game *game, pid_t pid, int input[2], int output[2],
-        int test[2], Player *player, char *file) {
+void setup_child(Game *game, int id, int input[2], int output[2],
+        int test[2], char *file) {
     if (close(input[WRITE]) == -1) {
         exit_with_error(game, BAD_START);
     }
@@ -189,13 +188,13 @@ void setup_child(Game *game, pid_t pid, int input[2], int output[2],
     if (close(output[WRITE]) == -1) {
         exit_with_error(game, BAD_START);
     }
-    // int devNull = open("/dev/null", O_WRONLY);
-    // if (devNull == -1) {
-    //     exit_with_error(game, BAD_START);
-    // }
-    // if (dup2(devNull, STDERR_FILENO) == -1) {
-    //     exit_with_error(game, BAD_START);
-    // }
+    int devNull = open("/dev/null", O_WRONLY);
+    if (devNull == -1) {
+        exit_with_error(game, BAD_START);
+    }
+    if (dup2(devNull, STDERR_FILENO) == -1) {
+        exit_with_error(game, BAD_START);
+    }
     if (close(test[READ]) == -1) {
         exit_with_error(game, BAD_START);
     }
@@ -206,11 +205,10 @@ void setup_child(Game *game, pid_t pid, int input[2], int output[2],
     if (fcntl(test[WRITE], F_SETFD, flags | FD_CLOEXEC) == -1) {
         exit_with_error(game, BAD_START);
     }
-    player->pid = pid;
     char playerAmountArg[3], playerIdArg[3];
     playerAmountArg[2] = '\0', playerIdArg[2] = '\0';
     sprintf(playerAmountArg, "%d", game->playerAmount);
-    sprintf(playerIdArg, "%d", player->id);
+    sprintf(playerIdArg, "%d", id);
     execlp(file, playerAmountArg, playerIdArg, NULL);
     FILE *testPipe = fdopen(test[WRITE], "w");
     fprintf(testPipe, "test\n");
@@ -218,7 +216,7 @@ void setup_child(Game *game, pid_t pid, int input[2], int output[2],
     close(test[WRITE]);
 }
 
-void setup_player(Game *game, Player *player, char *file) {
+void setup_player(Game *game, int id, char *file) {
     int input[2], output[2], test[2];
     if (pipe(input) != 0 || pipe(output) != 0 || pipe(test) != 0) {
         exit_with_error(game, BAD_START);
@@ -227,9 +225,10 @@ void setup_player(Game *game, Player *player, char *file) {
     if (pid < 0) {
         exit_with_error(game, BAD_START);
     } else if (pid > 0) { // Parent Process
-        setup_parent(game, player, input, output, test);
+        setup_parent(game, id, input, output, test);
     } else { // Child Process
-        setup_child(game, pid, input, output, test, player, file);
+        game->players[id].pid = pid;
+        setup_child(game, id, input, output, test, file);
     }
 }
 
@@ -241,9 +240,10 @@ void setup_players(Game *game, char **playerPaths) {
         }
         Player player;
         player.id = i;
-        set_player_values(&player);
-        setup_player(game, &player, playerPaths[i]);
         game->players[i] = player;
+        set_player_values(&game->players[i]);
+        setup_player(game, i, playerPaths[i]);
+        
     }
 }
 
@@ -518,10 +518,7 @@ int process(Game *game, Player *player, char *encoded) {
 }
 
 void init_game(Game *game) {
-    game->deckIndex = 0;
-    game->deckFaceup.amount = 0;
     draw_cards(game);
-    //printf("Comm started -----\n");
     send_all(game, "tokens%i\n", game->tokenPile[PURPLE]);
     for (int i = 0; i < game->deckFaceup.amount; i++) {
         Card c = game->deckFaceup.cards[i];
@@ -543,6 +540,7 @@ void play_game(Game *game) {
     init_game(game);
     int gameOver = 0;
     while (!gameOver) {
+
         if (game->deckFaceup.amount == 0 || game_is_over(*game)) {
             send_all(game, "eog\n");
             get_winners(game, get_highest_points(*game), TRUE);
@@ -570,18 +568,18 @@ int main(int argc, char **argv) {
     }
     char **playersPaths = malloc(0);
     game.playerAmount = 0;
+    game.deckFaceup.amount = 0;
     for (int i = 4; i < argc; i++) {
         if (i != argc) {
             playersPaths = realloc(playersPaths, sizeof(char *) * (i - 3));
         }
         playersPaths[i - 4] = argv[i];
-            game.playerAmount++;
+        game.playerAmount++;
     }
     setup_players(&game, playersPaths);
     free(playersPaths);
     game.deckTotal = load_deck(argv[DECK_FILE]);
-    // wait_children(&game);
     play_game(&game);
-    wait_children(&game);
+    // wait_children(&game);
     free_game(&game);
 }
