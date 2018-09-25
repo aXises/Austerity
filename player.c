@@ -244,22 +244,22 @@ int process(Game *game, Player *player, char *encoded) {
             }
             status = 1;
         }
-        //display_stats(game);
+        display_stats(game);
     } else if (strstr(encoded, "newcard") != NULL) {
         // fprintf(stderr, "newcard\n");
         status = process_newcard(game, encoded);
-        //display_stats(game);
+        display_stats(game);
     } else if (strstr(encoded, "purchased") != NULL) {
         status = process_purchase(game, encoded);
-        //display_stats(game);
+        display_stats(game);
     } else if (strstr(encoded, "took") != NULL) {
         // fprintf(stderr, "processing took\n");
         status = process_took(game, encoded);
-        //display_stats(game);
+        display_stats(game);
     } else if (strstr(encoded, "wild") != NULL) {
         // fprintf(stderr, "processing wild\n");
         status = process_wild(game, encoded);
-        //display_stats(game);
+        display_stats(game);
     } else {
         status = 0;
     }
