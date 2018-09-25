@@ -2,10 +2,7 @@
 #define PLAYER_NAME "shenzi"
 
 int main(int argc, char **argv) {
-    fprintf(stderr, "argc: %i, argv0: %s, argv1: %s\n", argc, argv[0], argv[1]);
-        fprintf(stderr, "Test\n");
     check_args(argc, argv, PLAYER_NAME);
-
     play_game(argv[TOTAL_PLAYERS], argv[PLAYER_ID], PLAYER_NAME);
     return 0;
 }
