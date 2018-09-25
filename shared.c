@@ -21,7 +21,6 @@ int index_of_card(Deck deck, Card card, int first) {
 
 void set_player_values(Player *player) {
     player->wildTokens = 0;
-    player->hand.amount = 0;
     player->points = 0;
     for (int i = 0; i < 4; i++) {
         player->currentDiscount[i] = 0;

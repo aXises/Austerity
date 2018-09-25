@@ -45,7 +45,6 @@ typedef struct {
     int tokens[4]; // P, B, Y, R
     int wildTokens;
     int points;
-    Deck hand;
 } Player;
 
 typedef struct {

@@ -28,7 +28,7 @@ enum argument {
  **/
 void check_args(int, char **);
 void checkDeckFile(char **);
-void exit_with_error(int);
+void exit_with_error(Game *, int);
 Deck load_deck(char *);
 
 #endif
