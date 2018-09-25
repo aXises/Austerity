@@ -11,8 +11,8 @@
 #define COMM_ERR 6
 
 enum argument {
-    TOTAL_PLAYERS = 0,
-    PLAYER_ID = 1,
+    TOTAL_PLAYERS = 1,
+    PLAYER_ID = 2,
 };
 
 void exit_with_error(int, char *);

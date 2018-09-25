@@ -210,7 +210,7 @@ void setup_child(Game *game, int id, int input[2], int output[2],
     playerAmountArg[2] = '\0', playerIdArg[2] = '\0';
     sprintf(playerAmountArg, "%d", game->playerAmount);
     sprintf(playerIdArg, "%d", id);
-    execlp(file, playerAmountArg, playerIdArg, NULL);
+    execlp(file, file, playerAmountArg, playerIdArg, NULL);
     FILE *testPipe = fdopen(test[WRITE], "w");
     fprintf(testPipe, "test\n");
     fclose(testPipe);
