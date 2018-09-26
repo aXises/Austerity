@@ -74,7 +74,7 @@ void cost_of_card(Card card, Player *player, int finalCost[5]) { //Tp,Tb,Ty,Tr,T
         if (priceAfterDiscount > player->tokens[i]) {
             int wildUsed = priceAfterDiscount - player->tokens[i];
             finalCost[WILD] += wildUsed;
-            finalCost[i] += player->tokens[i] - wildUsed;
+            finalCost[i] += player->tokens[i];
             // finalCost[i] -= priceAfterDiscount - player->tokens[i];
         } else {
             finalCost[i] += priceAfterDiscount;

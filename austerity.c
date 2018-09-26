@@ -364,7 +364,6 @@ int use_tokens(Game *game, Player *player, Card card, int tokens[5]) {
         if (tokens[i] < discountedPrice) {
             int wildRequired = discountedPrice - tokens[i];
             if (wildRequired > (wild - usedWild)) {
-        // printf("****HUB: fail here diff %i, %i - %i\n", wildRequired, wild, usedWild);
                 return 0;
             } else {
                 usedWild += wildRequired;
@@ -500,7 +499,6 @@ int process_wild(Game *game, Player *player, char *encoded) {
 }
 
 int process(Game *game, Player *player, char *encoded) {
-    // printf("***processing %s from: %c\n", encoded, player->id + 'A');
     if (strstr(encoded, "purchase") != NULL) {
         //printf("%i, attempt to purchase: %s\n", player->id, encoded);
         //fprintf(stderr, "before cost card 2 player %i tokens: %i %i %i %i\n", player->id, player->tokens[0], player->tokens[1], player->tokens[2], player->tokens[3]);
