@@ -691,13 +691,17 @@ int game_is_over(Game game) {
 void play_game(Game *game) {
     init_game(game);
     int gameOver = 0;
-    while (!gameOver) {
-        if (game->deckFaceup.amount == 0 || game_is_over(*game)) {
-            send_all(game, "eog\n");
-            get_winners(game, get_highest_points(*game), TRUE);
+    while (1) {
+        if (gameOver) {
             break;
         }
         for (int i = 0; i < game->playerAmount; i++) {
+            if (game->deckFaceup.amount == 0 || game_is_over(*game)) {
+                send_all(game, "eog\n");
+                get_winners(game, get_highest_points(*game), TRUE);
+                gameOver = 1;
+                break;
+            }
             send_message(game->players[i], "dowhat\n");
             char *message = listen(game->players[i]);
             if (!process(game, &(game->players[i]), message)) {
