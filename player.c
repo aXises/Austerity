@@ -296,7 +296,6 @@ void play_game(char *amount, char *id, char *name) {
             break;
         }
         if (!process(&game, &game.players[atoi(id)], message)) {
-            free_game(&game);
             free(message);
             break;
         };

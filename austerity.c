@@ -113,6 +113,9 @@ Deck load_deck(char *fileName) {
     fclose(file);
     content = realloc(content, sizeof(char) * (counter + 1));
     content[counter] = '\0';
+    if (strcmp(content, "") == 0) {
+        exit_with_error(NULL, INVALID_DECK_FILE); 
+    }
     char **cardArr = split(content, "\n");
     Deck deck;
     deck.amount = cards + 1;
