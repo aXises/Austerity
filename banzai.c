@@ -72,10 +72,7 @@ int attempt_purchase(Game *game, Player *player) {
             index = cardIndex;
         }
     }
-    int cost[5];
-    cost_of_card(game->deckFaceup.cards[index], player, cost);
-    send_message("purchase%i:%i,%i,%i,%i,%i\n", index, cost[PURPLE],
-            cost[BROWN], cost[YELLOW], cost[RED], cost[WILD]);
+    purchase_card(game, player, index);
     free(deck.cards);
     free(highest.cards);
     free(mostWildTokensDeck.cards);

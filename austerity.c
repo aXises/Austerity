@@ -692,7 +692,6 @@ void play_game(Game *game) {
     init_game(game);
     int gameOver = 0;
     while (!gameOver) {
-
         if (game->deckFaceup.amount == 0 || game_is_over(*game)) {
             send_all(game, "eog\n");
             get_winners(game, get_highest_points(*game), TRUE);

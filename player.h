@@ -29,5 +29,7 @@ void cost_of_card(Card, Player *, int [5]);
 int sum_cost(int [5]);
 Deck get_card_by_cost(Deck, Player *, int);
 int can_take_tokens(Game *, Player *);
+void purchase_card(Game *, Player *, int);
+void display_stats(Game *);
 
 #endif

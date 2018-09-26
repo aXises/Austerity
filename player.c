@@ -583,3 +583,10 @@ int can_take_tokens(Game *game, Player *player) {
     }
     return 1;
 }
+
+void purchase_card(Game *game, Player *player, int index) {
+    int cost[5];
+    cost_of_card(game->deckFaceup.cards[index], player, cost);
+    send_message("purchase%i:%i,%i,%i,%i,%i\n", index, cost[PURPLE],
+            cost[BROWN], cost[YELLOW], cost[RED], cost[WILD]);
+}
