@@ -2,7 +2,6 @@
 #define PLAYER_H
 
 #include "shared.h"
-#include "util.h"
 
 #define NORMAL 0
 #define WRONG_ARG_NUM 1

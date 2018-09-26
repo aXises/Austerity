@@ -1,5 +1,10 @@
 #include "player.h"
 
+/**
+*
+* @param error
+* @param name
+*/
 void exit_with_error(int error, char *name) {
     switch(error) {
         case (WRONG_ARG_NUM):
@@ -20,6 +25,12 @@ void exit_with_error(int error, char *name) {
     exit(error);
 }
 
+/**
+*
+* @param argc
+* @param argv
+* @param name
+*/
 void check_args(int argc, char **argv, char *name) {
     if (argc != 3) {
         exit_with_error(WRONG_ARG_NUM, name);
@@ -38,6 +49,10 @@ void check_args(int argc, char **argv, char *name) {
 
 }
 
+/**
+*
+* @param message
+*/
 void send_message(char *message, ...) {
     va_list args;
     va_start(args, message);
@@ -46,6 +61,10 @@ void send_message(char *message, ...) {
     fflush(stdout);
 }
 
+/**
+*
+* @return char
+*/
 char *listen(void) {
     char *message = malloc(sizeof(char) * MAX_INPUT);
     if (fgets(message, MAX_INPUT, stdin) == NULL) {
@@ -57,6 +76,11 @@ char *listen(void) {
     return message;
 }
 
+/**
+*
+* @param encoded
+* @return int
+*/
 int process_tokens(char *encoded) {
     if (strlen(encoded) < 7) {
         return -1;
@@ -82,6 +106,10 @@ int process_tokens(char *encoded) {
     return tokens;
 }
 
+/**
+*
+* @param game
+*/
 void free_game(Game *game) {
     if (game->deckFaceup.amount >= 0) {
         free(game->deckFaceup.cards);
@@ -91,6 +119,12 @@ void free_game(Game *game) {
     }
 }
 
+/**
+*
+* @param id
+* @param name
+* @return Player
+*/
 Player setup_player(int id, char *name) {
     Player player;
     player.id = id;
@@ -103,6 +137,11 @@ Player setup_player(int id, char *name) {
     return player;
 }
 
+/**
+*
+* @param amount
+* @return Game
+*/
 Game setup_game(int amount) {
     Game game;
     game.playerAmount = amount;
@@ -111,6 +150,11 @@ Game setup_game(int amount) {
     return game;
 }
 
+/**
+*
+* @param deck
+* @param index
+*/
 void remove_card(Deck *deck, int index) {
     deck->amount--;
     Deck newDeck;
@@ -127,12 +171,24 @@ void remove_card(Deck *deck, int index) {
     deck->cards = newDeck.cards;
 }
 
+/**
+*
+* @param deck
+* @param card
+* adds 1 card to the deck.
+*/
 void add_card(Deck *deck, Card card) {
     deck->cards = realloc(deck->cards, sizeof(Card) * (deck->amount + 1));
     deck->cards[deck->amount] = card;
     deck->amount++;
 }
 
+/**
+*
+* @param game
+* @param encoded
+* @return int
+*/
 int process_newcard(Game *game, char *encoded) {
     char **cardDetails = split(encoded, "d");
     if (strcmp(cardDetails[0], "newcar") != 0 || !check_card(cardDetails[1])) {
@@ -161,6 +217,12 @@ int process_newcard(Game *game, char *encoded) {
     return 1;
 }
 
+/**
+*
+* @param encoded
+* @param game
+* @return int
+*/
 int process_took(Game *game, char *encoded) {
     char **details = split(encoded, "k");
     if (strcmp(details[0], "too") != 0 || strlen(details[0]) != 3 ||
@@ -185,7 +247,13 @@ int process_took(Game *game, char *encoded) {
     free(details);
     return 1;
 }
-    
+
+/**
+*
+* @param game
+* @param encoded
+* @return int
+*/
 int process_wild(Game *game, char *encoded) {
     if (strlen(encoded) != 5 || encoded[4] > 'Z' || encoded[4] < 'A') {
         return 0;
@@ -194,6 +262,12 @@ int process_wild(Game *game, char *encoded) {
     return 1;
 }
 
+/**
+*
+* @param game
+* @param player
+* @param tokens
+*/
 void update_tokens(Game *game, Player *player, int tokens[5]) {
     for (int i = 0; i < 4; i++) {
         player->tokens[i] -= tokens[i];
@@ -202,6 +276,12 @@ void update_tokens(Game *game, Player *player, int tokens[5]) {
     player->wildTokens -= tokens[WILD];
 }
 
+/**
+*
+* @param game
+* @param encoded
+* @return int
+*/
 int process_purchase(Game *game, char *encoded) {
     char **details = split(encoded, "d");
     if (strcmp(details[0], "purchase") != 0 ||
@@ -236,22 +316,33 @@ int process_purchase(Game *game, char *encoded) {
     return 1;
 }
 
+/**
+*
+* @param game
+*/
 void display_stats(Game *game) {
     for (int i = 0; i < game->deckFaceup.amount; i++) {
         Card c = game->deckFaceup.cards[i];
         fprintf(stderr, "Card %i:%c/%i/%i,%i,%i,%i\n", i, c.colour, c.value,
-                c.cost[PURPLE], c.cost[BLUE], c.cost[YELLOW], c.cost[RED]);
+                c.cost[PURPLE], c.cost[BROWN], c.cost[YELLOW], c.cost[RED]);
     }
     for (int i = 0; i < game->playerAmount; i++) {
         Player p = game->players[i];
         fprintf(stderr, "Player %c:%i:Discounts=%i,%i,%i,%i:Tokens=%i,%i,%i,%i"\
                 ",%i\n", p.id + 'A', p.points, p.currentDiscount[PURPLE],
-                p.currentDiscount[BLUE], p.currentDiscount[YELLOW],
-                p.currentDiscount[RED], p.tokens[PURPLE], p.tokens[BLUE],
+                p.currentDiscount[BROWN], p.currentDiscount[YELLOW],
+                p.currentDiscount[RED], p.tokens[PURPLE], p.tokens[BROWN],
                 p.tokens[YELLOW], p.tokens[RED], p.wildTokens);
     } 
 }
 
+/**
+*
+* @param game
+* @param player
+* @param encoded
+* @return int
+*/
 int process(Game *game, Player *player, char *encoded) {
     int status;
     if (strstr(encoded, "dowhat") != NULL) {
@@ -285,6 +376,11 @@ int process(Game *game, Player *player, char *encoded) {
     return status;
 }
 
+/**
+*
+* @param amount
+* @return Player
+*/
 Player *setup_players(const int amount) {
     Player *players = malloc(0);
     for (int i = 0; i < amount; i++) {
@@ -299,6 +395,12 @@ Player *setup_players(const int amount) {
     return players;
 }
 
+/**
+*
+* @param amount
+* @param id
+* @param name
+*/
 void play_game(char *amount, char *id, char *name) {
     Game game = setup_game(atoi(amount));
     game.players = setup_players(atoi(amount));
@@ -321,6 +423,11 @@ void play_game(char *amount, char *id, char *name) {
     exit_with_error(error, "");
 }
 
+/**
+*
+* @param deck
+* @return int
+*/
 int largest_value(Deck deck) {
     int largest = 0;
     for (int i = 0; i < deck.amount; i++) {
@@ -331,6 +438,12 @@ int largest_value(Deck deck) {
     return largest;
 }
 
+/**
+*
+* @param deck
+* @param value
+* @return Deck
+*/
 Deck get_card_by_value(Deck deck, int value) {
     Deck newDeck;
     newDeck.cards = malloc(0);
@@ -347,11 +460,17 @@ Deck get_card_by_value(Deck deck, int value) {
     return newDeck;
 }
 
+/**
+*
+* @param card
+* @param player
+* @return int
+*/
 int can_afford(Card card, Player *player) {
     int wildUsed = 0;
     for (int i = 0; i < 4; i++) {
         if (card.cost[i] - player->currentDiscount[i] > player->tokens[i]) {
-            wildUsed += card.cost[i] - player->tokens[i];
+            wildUsed += card.cost[i] - player->currentDiscount[i] - player->tokens[i];
             if (wildUsed > player->wildTokens) {
                 return 0;
             }
@@ -360,6 +479,12 @@ int can_afford(Card card, Player *player) {
     return 1;
 }
 
+/**
+*
+* @param deck
+* @param player
+* @return Deck
+*/
 Deck affordable_cards(Deck deck, Player *player) {
     Deck newDeck;
     newDeck.cards = malloc(0);
@@ -376,14 +501,18 @@ Deck affordable_cards(Deck deck, Player *player) {
     return newDeck;
 }
 
+/**
+*
+* @param card
+* @param player
+* @param finalCost
+*/
 void cost_of_card(Card card, Player *player, int finalCost[5]) {
     for (int i = 0; i < 5; i++) {
         finalCost[i] = 0;
     }
     for (int i = 0; i < 4; i++) {
-
         int priceAfterDiscount = card.cost[i] - player->currentDiscount[i];
-
         if (priceAfterDiscount > player->tokens[i]) {
             int wildUsed = priceAfterDiscount - player->tokens[i];
             finalCost[WILD] += wildUsed;
@@ -398,6 +527,11 @@ void cost_of_card(Card card, Player *player, int finalCost[5]) {
     }
 }
 
+/**
+*
+* @param cost
+* @return int
+*/
 int sum_cost(int cost[5]) {
     int sum = 0;
     for (int i = 0; i < 5; i++) {
@@ -406,6 +540,13 @@ int sum_cost(int cost[5]) {
     return sum;
 }
 
+/**
+*
+* @param deck
+* @param player
+* @param costTotal
+* @return Deck
+*/
 Deck get_card_by_cost(Deck deck, Player *player, int costTotal) {
     Deck newDeck;
     newDeck.cards = malloc(0);
@@ -424,6 +565,12 @@ Deck get_card_by_cost(Deck deck, Player *player, int costTotal) {
     return newDeck;
 }
 
+/**
+*
+* @param game
+* @param player
+* @return int
+*/
 int can_take_tokens(Game *game, Player *player) {
     int emptyPile = 0;
     for (int i = 0; i < 4; i++) {

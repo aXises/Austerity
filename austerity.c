@@ -1,5 +1,9 @@
 #include "austerity.h"
 
+/**
+*
+* @param game
+*/
 void free_game(Game *game) {
     if (game->deckTotal.amount < 8) {
         free(game->deckTotal.cards);
@@ -18,6 +22,10 @@ void free_game(Game *game) {
     free(game->players);
 }
 
+/**
+*
+* @param game
+*/
 void kill_children(Game *game) {
     for (int i = 0; i < game->playerAmount; i++) {
         if (game->players[i].pid != 0) {
@@ -26,6 +34,10 @@ void kill_children(Game *game) {
     }
 }
 
+/**
+*
+* @param game
+*/
 void wait_children(Game *game) {
     for (int i = 0; i < game->playerAmount; i++) {
         int status, id;
@@ -43,6 +55,11 @@ void wait_children(Game *game) {
     }
 }
 
+/**
+*
+* @param argc
+* @param argv
+*/
 void check_args(int argc, char **argv) {
     if (argc < 6 || argc > 26) {
         exit_with_error(NULL, WRONG_ARG_NUM);
@@ -54,6 +71,11 @@ void check_args(int argc, char **argv) {
     }
 }
 
+/**
+*
+* @param game
+* @param error
+*/
 void exit_with_error(Game *game, int error) {
     if (game != NULL) {
         if (error == BAD_START) {
@@ -94,6 +116,11 @@ void exit_with_error(Game *game, int error) {
     exit(error);
 }
 
+/**
+*
+* @param deck
+* @param cardArr
+*/
 void parse_deck(Deck deck, char **cardArr) {
     for (int i = 0; i < deck.amount; i++) {
         if (i != deck.amount - 1 || strcmp(cardArr[i], "") != 0) {
@@ -121,6 +148,11 @@ void parse_deck(Deck deck, char **cardArr) {
     }
 }
 
+/**
+*
+* @param fileName
+* @return Deck
+*/
 Deck load_deck(char *fileName) {
     FILE *file = fopen(fileName, "r");
     if (file == NULL || !file) {
@@ -152,6 +184,12 @@ Deck load_deck(char *fileName) {
     return deck;
 }
 
+/**
+*
+* @param game
+* @param id
+* @param input
+*/
 void setup_parent(Game *game, int id, int input[2],
         int output[2], int test[2]) {
     if (close(input[READ]) == -1 || close(output[WRITE]) == -1 ||
@@ -175,6 +213,13 @@ void setup_parent(Game *game, int id, int input[2],
     free(message);
 }
 
+/**
+*
+* @param game
+* @param id
+* @param input
+* @param output
+*/
 void setup_child(Game *game, int id, int input[2], int output[2],
         int test[2], char *file) {
     if (close(input[WRITE]) == -1) {
@@ -223,6 +268,12 @@ void setup_child(Game *game, int id, int input[2], int output[2],
     close(test[WRITE]);
 }
 
+/**
+*
+* @param game
+* @param id
+* @param file
+*/
 void setup_player(Game *game, int id, char *file) {
     int input[2], output[2], test[2];
     if (pipe(input) != 0 || pipe(output) != 0 || pipe(test) != 0) {
@@ -239,6 +290,11 @@ void setup_player(Game *game, int id, char *file) {
     }
 }
 
+/**
+*
+* @param game
+* @param playerPaths
+*/
 void setup_players(Game *game, char **playerPaths) {
     game->players = malloc(0);
     for (int i = 0; i < game->playerAmount; i++) {
@@ -254,6 +310,11 @@ void setup_players(Game *game, char **playerPaths) {
     }
 }
 
+/**
+*
+* @param player
+* @param message
+*/
 void send_message(Player player, char *message, ...) {
     va_list args;
     va_start(args, message);
@@ -262,6 +323,11 @@ void send_message(Player player, char *message, ...) {
     fflush(player.input);
 }
 
+/**
+*
+* @param game
+* @param message
+*/
 void send_all(Game *game, char *message, ...) {
     for (int i = 0; i < game->playerAmount; i++) {
         va_list args;
@@ -272,16 +338,31 @@ void send_all(Game *game, char *message, ...) {
     }
 }
 
+/**
+*
+* @param game
+* @return int
+* 
+*/
 int has_next_card(Game *game) {
     return game->deckTotal.amount != game->deckIndex;
 }
 
+/**
+*
+* @param c
+*/
 void display_card(Card c) {
     printf("New card = Bonus %c, worth %i, costs %i,%i,%i,%i\n", c.colour, 
-            c.value, c.cost[PURPLE], c.cost[BLUE],
+            c.value, c.cost[PURPLE], c.cost[BROWN],
             c.cost[YELLOW], c.cost[RED]);
 }
 
+/**
+*
+* @param game
+* @param deck
+*/
 void draw_next(Game *game, Deck *deck) {
     if (has_next_card(game)) {
         Card card = game->deckTotal.cards[(game->deckIndex) - 1];
@@ -290,11 +371,15 @@ void draw_next(Game *game, Deck *deck) {
         deck->amount++;
         display_card(card);
         send_all(game, "newcard%c:%i:%i,%i,%i,%i\n", card.colour, card.value,
-                card.cost[PURPLE], card.cost[BLUE],
+                card.cost[PURPLE], card.cost[BROWN],
                 card.cost[YELLOW], card.cost[RED]);
     }
 }
 
+/**
+*
+* @param game
+*/
 void draw_cards(Game *game) {
     if (game->deckTotal.amount < 8) {
         game->deckFaceup.cards = game->deckTotal.cards;
@@ -321,6 +406,12 @@ void draw_cards(Game *game) {
     }
 }
 
+/**
+*
+* @param game
+* @param player
+* @param index
+*/
 void buy_card(Game *game, Player *player, int index) {
     Deck newDeck;
     newDeck.cards = malloc(0);
@@ -344,6 +435,11 @@ void buy_card(Game *game, Player *player, int index) {
     game->deckFaceup.cards = newDeck.cards;
 }
 
+/**
+*
+* @param player
+* @return char
+*/
 char *listen(Player player) {
     char *message = malloc(sizeof(char) * MAX_INPUT);
     if (fgets(message, MAX_INPUT, player.output) == NULL) {
@@ -356,6 +452,14 @@ char *listen(Player player) {
     return message;
 }
 
+/**
+*
+* @param game
+* @param player
+* @param card
+* @param tokens
+* @return int
+*/
 int use_tokens(Game *game, Player *player, Card card, int tokens[5]) {
     // printf("Player %c purchased\n", player->id + 'A');
     int wild = tokens[WILD];
@@ -384,6 +488,13 @@ int use_tokens(Game *game, Player *player, Card card, int tokens[5]) {
     return 1;
 }
 
+/**
+*
+* @param game
+* @param player
+* @param encoded
+* @return int
+*/
 int process_purchase(Game *game, Player *player, char *encoded) {
     if (!match_seperators(encoded, 1, 4)) {
         return 0;
@@ -421,16 +532,22 @@ int process_purchase(Game *game, Player *player, char *encoded) {
     update_discount(card.colour, player);
     player->points += card.value;
     printf("Player %c purchased %i using %i,%i,%i,%i,%i\n", player->id + 'A',
-            index, tokens[PURPLE], tokens[BLUE], tokens[YELLOW], tokens[RED],
+            index, tokens[PURPLE], tokens[BROWN], tokens[YELLOW], tokens[RED],
             tokens[WILD]);
     buy_card(game, player, index);
     //printf("tokens: %i %i %i %i\n", game->tokenPile[0], game->tokenPile[1], game->tokenPile[2], game->tokenPile[3]);
     send_all(game, "purchased%c:%i:%i,%i,%i,%i,%i\n", player->id + 'A', index,
-            tokens[PURPLE], tokens[BLUE], tokens[YELLOW], tokens[RED], 
+            tokens[PURPLE], tokens[BROWN], tokens[YELLOW], tokens[RED], 
             tokens[WILD]);
     return 1;
 }
 
+/**
+*
+* @param game
+* @param content
+* @return int
+*/
 int check_take(Game *game, char *content) {
     if (!match_seperators(content, 0, 3)) {
         return 0;
@@ -438,6 +555,7 @@ int check_take(Game *game, char *content) {
     for (int i = 1; i < strlen(content); i++) {
         if (content[i] != ',' && content[i] != '\n'
                 && !isdigit(content[i])) {
+
             return 0;
         }
     }
@@ -445,10 +563,12 @@ int check_take(Game *game, char *content) {
     strcpy(contentCopy, content);
     char **commaSplit = split(contentCopy, ",");
     for (int i = 0; i < 4; i++) {
-        if (strcmp(commaSplit[i], "") == 0 || atoi(commaSplit[i]) > game->tokenPile[i]) {
-            free(commaSplit);
-            free(contentCopy);
-            return 0;
+        if (strcmp(commaSplit[i], "") == 0 || atoi(commaSplit[i]) != 0) {
+            if (atoi(commaSplit[i]) > game->tokenPile[i]) {
+                free(commaSplit);
+                free(contentCopy);
+                return 0;
+            }
         }
     }
     free(commaSplit);
@@ -466,7 +586,7 @@ int process_take(Game *game, Player *player, char *encoded) {
     if (!check_encoded(commaSplit, 4)) {
         return 0;
     }
-    int tokenPurple = 0, tokenBlue = 0, tokenYellow = 0, tokenRed = 0;
+    int tokenPurple = 0, tokenBROWN = 0, tokenYellow = 0, tokenRed = 0;
     for (int i = 0; i < 4; i++) {
         game->tokenPile[i] -= atoi(commaSplit[i]);
         player->tokens[i] += atoi(commaSplit[i]);
@@ -475,8 +595,8 @@ int process_take(Game *game, Player *player, char *encoded) {
             case (PURPLE):
                 tokenPurple = atoi(commaSplit[i]);
                 break;
-            case (BLUE):
-                tokenBlue = atoi(commaSplit[i]);
+            case (BROWN):
+                tokenBROWN = atoi(commaSplit[i]);
                 break;
             case (YELLOW):
                 tokenYellow = atoi(commaSplit[i]);
@@ -489,12 +609,19 @@ int process_take(Game *game, Player *player, char *encoded) {
     free(commaSplit);
     free(takeDetails);
     send_all(game, "took%c:%i,%i,%i,%i\n", player->id + 'A',
-            tokenPurple, tokenBlue, tokenYellow, tokenRed);
+            tokenPurple, tokenBROWN, tokenYellow, tokenRed);
     printf("Player %c drew %i,%i,%i,%i\n", player->id + 'A',
-            tokenPurple, tokenBlue, tokenYellow, tokenRed);
+            tokenPurple, tokenBROWN, tokenYellow, tokenRed);
     return 1;
 }
 
+/**
+*
+* @param game
+* @param player
+* @param encoded
+* @return int
+*/
 int process_wild(Game *game, Player *player, char *encoded) {
     if (strlen(encoded) != 4) {
         return 0;
@@ -504,6 +631,13 @@ int process_wild(Game *game, Player *player, char *encoded) {
     return 1;
 }
 
+/**
+*
+* @param game
+* @param player
+* @param encoded
+* @return int
+*/
 int process(Game *game, Player *player, char *encoded) {
     if (strstr(encoded, "purchase") != NULL) {
         //printf("%i, attempt to purchase: %s\n", player->id, encoded);
@@ -522,6 +656,10 @@ int process(Game *game, Player *player, char *encoded) {
     }
 }
 
+/**
+*
+* @param game
+*/
 void init_game(Game *game) {
     draw_cards(game);
     send_all(game, "tokens%i\n", game->tokenPile[PURPLE]);
@@ -532,6 +670,11 @@ void init_game(Game *game) {
     }
 }
 
+/**
+*
+* @param game
+* @return int
+*/
 int game_is_over(Game game) {
     for (int i = 0; i < game.playerAmount; i++) {
         if (game.players[i].points >= game.winPoints) {
@@ -541,6 +684,10 @@ int game_is_over(Game game) {
     return 0;
 }
 
+/**
+*
+* @param game
+*/
 void play_game(Game *game) {
     init_game(game);
     int gameOver = 0;

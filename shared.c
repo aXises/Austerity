@@ -1,12 +1,19 @@
 #include "shared.h"
 
+/**
+*
+* @param deck
+* @param card
+* @param first
+* @return int
+*/
 int index_of_card(Deck deck, Card card, int first) {
     int index = -1;
     for (int i = 0; i < deck.amount; i++) {
         Card c = deck.cards[i];
         if (c.colour == card.colour && c.value == card.value
                 && c.cost[PURPLE] == card.cost[PURPLE]
-                && c.cost[BLUE] == card.cost[BLUE]
+                && c.cost[BROWN] == card.cost[BROWN]
                 && c.cost[YELLOW] == card.cost[YELLOW]
                 && c.cost[RED] == card.cost[RED]) {
             index = i;
@@ -19,6 +26,10 @@ int index_of_card(Deck deck, Card card, int first) {
     return index;
 }
 
+/**
+*
+* @param player
+*/
 void set_player_values(Player *player) {
     player->wildTokens = 0;
     player->points = 0;
@@ -28,6 +39,11 @@ void set_player_values(Player *player) {
     }
 }
 
+/**
+*
+* @param string
+* @return int
+*/
 int is_string_digit(char *string) {
     for (int i = 0; i < strlen(string); i++) {
         if (!isdigit(string[i])) {
@@ -37,6 +53,12 @@ int is_string_digit(char *string) {
     return 1;
 }
 
+/**
+*
+* @param string
+* @param character
+* @return char
+*/
 char **split(char *string, char *character) {
     char *segment;
     char **splitString = malloc(sizeof(char *));
@@ -49,6 +71,10 @@ char **split(char *string, char *character) {
     return splitString;
 }
 
+/**
+*
+* @param deck
+*/
 void display_deck(Deck deck) {
     for (int i = 0; i < deck.amount; i++) {
         Card c = deck.cards[i];
@@ -57,6 +83,12 @@ void display_deck(Deck deck) {
     }
 }
 
+/**
+*
+* @param content
+* @param length
+* @return int
+*/
 int check_encoded(char **content, int length) {
     for (int i = 0; i < length; i++) {
         if (!is_string_digit(content[i]) ||
@@ -68,6 +100,11 @@ int check_encoded(char **content, int length) {
     return 1;
 }
 
+/**
+*
+* @param content
+* @return int
+*/
 int check_card(char *content) {
     if (content[0] != 'B' && content[0] != 'Y' && content[0] != 'P' &&
             content[0] != 'R') {
@@ -85,6 +122,12 @@ int check_card(char *content) {
     return 1;
 }
 
+/**
+*
+* @param str
+* @param expectedColumn
+* @return int
+*/
 int match_seperators(char *str, const int expectedColumn,
         const int expectedComma) {
     int colAmount = 0, commaAmount = 0;
@@ -101,13 +144,18 @@ int match_seperators(char *str, const int expectedColumn,
     return colAmount == expectedColumn && commaAmount == expectedComma; 
 }
 
+/**
+*
+* @param colour
+* @param player
+*/
 void update_discount(char colour, Player *player) {
     switch (colour) {
         case ('P'):
             player->currentDiscount[PURPLE]++;
             break;
         case ('B'):
-            player->currentDiscount[BLUE]++;
+            player->currentDiscount[BROWN]++;
             break;
         case ('Y'):
             player->currentDiscount[YELLOW]++;
@@ -118,6 +166,11 @@ void update_discount(char colour, Player *player) {
     }
 }
 
+/**
+*
+* @param game
+* @return int
+*/
 int get_highest_points(Game game) {
     int highestPoint = 0;
     for (int i = 0; i < game.playerAmount; i++) {
@@ -128,6 +181,12 @@ int get_highest_points(Game game) {
     return highestPoint;
 }
 
+/**
+*
+* @param game
+* @param points
+* @param isHub
+*/
 void get_winners(Game *game, int points, int isHub) {
     Player *winners = malloc(0);
     int counter = 0;

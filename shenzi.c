@@ -1,12 +1,19 @@
 #include "player.h"
 #define PLAYER_NAME "shenzi"
 
+
 int main(int argc, char **argv) {
     check_args(argc, argv, PLAYER_NAME);
     play_game(argv[TOTAL_PLAYERS], argv[PLAYER_ID], PLAYER_NAME);
     return 0;
 }
 
+/**
+*
+* @param game
+* @param player
+* @return int
+*/
 int attempt_purchase(Game *game, Player *player) {
     Deck deck = affordable_cards(game->deckFaceup, player);
     if (deck.amount == 0) {
@@ -35,19 +42,25 @@ int attempt_purchase(Game *game, Player *player) {
     int cost[5];
     cost_of_card(game->deckFaceup.cards[index], player, cost);
     send_message("purchase%i:%i,%i,%i,%i,%i\n", index, cost[PURPLE],
-            cost[BLUE], cost[YELLOW], cost[RED], cost[WILD]);
+            cost[BROWN], cost[YELLOW], cost[RED], cost[WILD]);
     free(d.cards);
     free(deck.cards);
     free(cheapest.cards);
     return 1;
 }
 
+/**
+*
+* @param game
+* @param player
+* @return int
+*/
 int attempt_take_tokens(Game *game, Player *player) {
     if (!can_take_tokens(game, player)) {
         return 0;
     }
     int tokenTakenTotal = 0;
-    int tokenPurple = 0, tokenBlue = 0, tokenYellow = 0, tokenRed = 0;
+    int tokenPurple = 0, tokenBROWN = 0, tokenYellow = 0, tokenRed = 0;
     for (int i = 0; i < 4; i++) {
         if (tokenTakenTotal > 2) {
             break;
@@ -58,8 +71,8 @@ int attempt_take_tokens(Game *game, Player *player) {
                 case (PURPLE):
                     tokenPurple = 1;
                     break;
-                case (BLUE):
-                    tokenBlue = 1;
+                case (BROWN):
+                    tokenBROWN = 1;
                     break;
                 case (YELLOW):
                     tokenYellow = 1;
@@ -71,10 +84,15 @@ int attempt_take_tokens(Game *game, Player *player) {
         }
     }
     send_message("take%i,%i,%i,%i\n",
-            tokenPurple, tokenBlue, tokenYellow, tokenRed);
+            tokenPurple, tokenBROWN, tokenYellow, tokenRed);
     return 1;
 }
 
+/**
+*
+* @param game
+* @param player
+*/
 void process_dowhat(Game *game, Player *player) {
     if (attempt_purchase(game, player)) {
     } else if (attempt_take_tokens(game, player)) {
