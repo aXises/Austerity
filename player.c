@@ -319,5 +319,120 @@ void play_game(char *amount, char *id, char *name) {
     }
     free_game(&game);
     exit_with_error(error, "");
-    // fprintf(stderr, "player %s shutdown\n", id);
+}
+
+int largest_value(Deck deck) {
+    int largest = 0;
+    for (int i = 0; i < deck.amount; i++) {
+        if (deck.cards[i].value > largest) {
+            largest = deck.cards[i].value;
+        }
+    }
+    return largest;
+}
+
+Deck get_card_by_value(Deck deck, int value) {
+    Deck newDeck;
+    newDeck.cards = malloc(0);
+    int counter = 0;
+    for (int i = 0; i < deck.amount; i++) {
+        if (deck.cards[i].value == value) {
+            newDeck.cards = realloc(newDeck.cards,
+                    sizeof(Card) * (counter + 1));
+            newDeck.cards[counter] = deck.cards[i];
+            counter++;
+        }
+    }
+    newDeck.amount = counter;
+    return newDeck;
+}
+
+int can_afford(Card card, Player *player) {
+    int wildUsed = 0;
+    for (int i = 0; i < 4; i++) {
+        if (card.cost[i] - player->currentDiscount[i] > player->tokens[i]) {
+            wildUsed += card.cost[i] - player->tokens[i];
+            if (wildUsed > player->wildTokens) {
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+
+Deck affordable_cards(Deck deck, Player *player) {
+    Deck newDeck;
+    newDeck.cards = malloc(0);
+    int counter = 0;
+    for (int i = 0; i < deck.amount; i++) {
+        if (can_afford(deck.cards[i], player)) {
+            newDeck.cards = realloc(newDeck.cards,
+                    sizeof(Card) * (counter + 1));
+            newDeck.cards[counter] = deck.cards[i];
+            counter++;
+        }
+    }
+    newDeck.amount = counter;
+    return newDeck;
+}
+
+void cost_of_card(Card card, Player *player, int finalCost[5]) {
+    for (int i = 0; i < 5; i++) {
+        finalCost[i] = 0;
+    }
+    for (int i = 0; i < 4; i++) {
+
+        int priceAfterDiscount = card.cost[i] - player->currentDiscount[i];
+
+        if (priceAfterDiscount > player->tokens[i]) {
+            int wildUsed = priceAfterDiscount - player->tokens[i];
+            finalCost[WILD] += wildUsed;
+            finalCost[i] += player->tokens[i];
+        } else {
+            finalCost[i] += priceAfterDiscount;
+        }
+        if (finalCost[i] < 0) {
+            finalCost[i] = 0;
+        }
+
+    }
+}
+
+int sum_cost(int cost[5]) {
+    int sum = 0;
+    for (int i = 0; i < 5; i++) {
+        sum += cost[i];
+    }
+    return sum;
+}
+
+Deck get_card_by_cost(Deck deck, Player *player, int costTotal) {
+    Deck newDeck;
+    newDeck.cards = malloc(0);
+    int counter = 0;
+    for (int i = 0; i < deck.amount; i++) {
+        int cost[5];
+        cost_of_card(deck.cards[i], player, cost);
+        if (sum_cost(cost) == costTotal) {
+            newDeck.cards = realloc(newDeck.cards,
+                    sizeof(Card) * (counter + 1));
+            newDeck.cards[counter] = deck.cards[i];
+            counter++;
+        }
+    }
+    newDeck.amount = counter;
+    return newDeck;
+}
+
+int can_take_tokens(Game *game, Player *player) {
+    int emptyPile = 0;
+    for (int i = 0; i < 4; i++) {
+        if (game->tokenPile[i] == 0) {
+            emptyPile++;
+        }
+    }
+    if (emptyPile > 1) {
+        return 0;
+    }
+    return 1;
 }

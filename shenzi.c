@@ -7,134 +7,13 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-int largest_value(Deck deck) {
-    int largest = 0;
-    for (int i = 0; i < deck.amount; i++) {
-        if (deck.cards[i].value > largest) {
-            largest = deck.cards[i].value;
-        }
-    }
-    return largest;
-}
-
-Deck get_card_by_value(Deck deck, int value) {
-    Deck newDeck;
-    newDeck.cards = malloc(0);
-    int counter = 0;
-    for (int i = 0; i < deck.amount; i++) {
-        if (deck.cards[i].value == value) {
-            newDeck.cards = realloc(newDeck.cards,
-                    sizeof(Card) * (counter + 1));
-            newDeck.cards[counter] = deck.cards[i];
-            counter++;
-        }
-    }
-    newDeck.amount = counter;
-    return newDeck;
-}
-
-int can_afford(Card card, Player *player) {
-    int wildUsed = 0;
-    for (int i = 0; i < 4; i++) {
-        if (card.cost[i] - player->currentDiscount[i] > player->tokens[i]) {
-            wildUsed += card.cost[i] - player->tokens[i];
-            if (wildUsed > player->wildTokens) {
-                //fprintf(stderr, "wildused: %i, player %i wild: %i\n", wildUsed, player->id, player->wildTokens);
-                return 0;
-            }
-        }
-    }
-    return 1;
-}
-
-Deck affordable_cards(Deck deck, Player *player) {
-    Deck newDeck;
-    newDeck.cards = malloc(0);
-    int counter = 0;
-    for (int i = 0; i < deck.amount; i++) {
-        if (can_afford(deck.cards[i], player)) {
-            newDeck.cards = realloc(newDeck.cards,
-                    sizeof(Card) * (counter + 1));
-            newDeck.cards[counter] = deck.cards[i];
-            counter++;
-        }
-    }
-    newDeck.amount = counter;
-    return newDeck;
-}
-
-void cost_of_card(Card card, Player *player, int finalCost[5]) { //Tp,Tb,Ty,Tr,Tw;
-    for (int i = 0; i < 5; i++) {
-        finalCost[i] = 0;
-    }
-    for (int i = 0; i < 4; i++) {
-        //fprintf(stderr, "card costs %i, player has %i tokens %i wild\n", card.cost[0], player->tokens[0], player->wildTokens);
-        int priceAfterDiscount = card.cost[i] - player->currentDiscount[i];
-
-        if (priceAfterDiscount > player->tokens[i]) {
-            int wildUsed = priceAfterDiscount - player->tokens[i];
-            finalCost[WILD] += wildUsed;
-            finalCost[i] += player->tokens[i];
-            // finalCost[i] -= priceAfterDiscount - player->tokens[i];
-        } else {
-            finalCost[i] += priceAfterDiscount;
-        }
-        if (finalCost[i] < 0) {
-            finalCost[i] = 0;
-        }
-        //fprintf(stderr, "price after discount = %i, using %i wild\n", priceAfterDiscount, finalCost[4]);
-    }
-}
-
-void f(Player *player) {
-    // fprintf(stderr, "Player %i, tokens: %i %i %i %i %i\ndiscount: %i %i %i %i\n", player->id, player->tokens[0],
-    // player->tokens[1],player->tokens[2],player->tokens[3],player->wildTokens
-    // ,player->currentDiscount[0],player->currentDiscount[1],player->currentDiscount[2],player->currentDiscount[3]);
-}
-
-int sum_cost(int cost[5]) {
-    int sum = 0;
-    for (int i = 0; i < 5; i++) {
-        sum += cost[i];
-    }
-    return sum;
-}
-
-Deck get_card_by_cost(Deck deck, Player *player, int costTotal) {
-    Deck newDeck;
-    newDeck.cards = malloc(0);
-    int counter = 0;
-    for (int i = 0; i < deck.amount; i++) {
-        int cost[5];
-        cost_of_card(deck.cards[i], player, cost);
-        if (sum_cost(cost) == costTotal) {
-            newDeck.cards = realloc(newDeck.cards,
-                    sizeof(Card) * (counter + 1));
-            newDeck.cards[counter] = deck.cards[i];
-            counter++;
-        }
-    }
-    newDeck.amount = counter;
-    // free(deck.cards);
-    return newDeck;
-}
-
 int attempt_purchase(Game *game, Player *player) {
-    // fprintf(stderr, "Player 0 ===\n");
-    // fprintf(stderr, "player %c has %i wild\n", player->id, player->wildTokens);
     Deck deck = affordable_cards(game->deckFaceup, player);
     if (deck.amount == 0) {
         free(deck.cards);
         return 0;
     }
-    // fprintf(stderr, "can afford %i cards\n", deck.amount);
-    // display_deck(deck);
     Deck d = get_card_by_value(deck, largest_value(deck));
-    // fprintf(stderr, "total cards: \n");
-    // display_deck(game->deckFaceup);
-    // fprintf(stderr, "potenital cards: \n");
-    // display_deck(d);
-    //fprintf(stderr, "before cost card player %i tokens: %i %i %i %i\n", player->id, player->tokens[0], player->tokens[1], player->tokens[2], player->tokens[3]);
     int cheapestCost = 0;
     for (int i = 0; i < d.amount; i++) {
         int cost[5];
@@ -145,20 +24,14 @@ int attempt_purchase(Game *game, Player *player) {
         }
     }
     Deck cheapest = get_card_by_cost(d, player, cheapestCost);
-    // fprintf(stderr, "cheapestcards: %i\n", cheapestCost);
-    // display_deck(cheapest);
     int index = 0;
     for (int i = 0; i < cheapest.amount; i++) {
-        int cardIndex = index_of_card(game->deckFaceup, cheapest.cards[i], TRUE);
+        int cardIndex = index_of_card(game->deckFaceup,
+                cheapest.cards[i], TRUE);
         if (cardIndex > index) {
             index = cardIndex;
         }
     }
-    //fprintf(stderr, "cost:%i %i %i %i %i", cost[0], cost[1], cost[2], cost[3], cost[4]);
-    // fprintf(stderr, "%i player has %i\n", player->id, player->tokens[0]);
-    // display_deck(game->deckFaceup);
-    // fprintf(stderr, "%i PURCHASING %i %i %i %i\n", player->id, d.cards[0].cost[0], d.cards[0].cost[1], d.cards[0].cost[2] ,d.cards[0].cost[3]);
-    // f(player);
     int cost[5];
     cost_of_card(game->deckFaceup.cards[index], player, cost);
     send_message("purchase%i:%i,%i,%i,%i,%i\n", index, cost[PURPLE],
@@ -166,21 +39,6 @@ int attempt_purchase(Game *game, Player *player) {
     free(d.cards);
     free(deck.cards);
     free(cheapest.cards);
-    return 1;
-}
-
-int can_take_tokens(Game *game, Player *player) {
-    int emptyPile = 0;
-    for (int i = 0; i < 4; i++) {
-        // fprintf(stderr, "tokenpile[%i] = %i : %i\n", i, game->tokenPile[i], player->tokens[i]);
-        if (game->tokenPile[i] == 0) {
-            emptyPile++;
-        }
-    }
-    if (emptyPile > 1) {
-        // fprintf(stderr, "empty piles\n");
-        return 0;
-    }
     return 1;
 }
 

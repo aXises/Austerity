@@ -22,5 +22,13 @@ void make_move(Game *, Player *, char *);
 int process(Game *, Player *, char *);
 void process_dowhat(Game *, Player *);
 void send_message(char *, ...);
+int largest_value(Deck);
+Deck get_card_by_value(Deck, int);
+int can_afford(Card, Player *);
+Deck affordable_cards(Deck, Player *);
+void cost_of_card(Card, Player *, int [5]);
+int sum_cost(int [5]);
+Deck get_card_by_cost(Deck, Player *, int);
+int can_take_tokens(Game *, Player *);
 
 #endif
