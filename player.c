@@ -32,6 +32,9 @@ void check_args(int argc, char **argv, char *name) {
             || atoi(argv[PLAYER_ID]) < 0) {
         exit_with_error(INVALID_ID, name);
     }
+    if (atoi(argv[PLAYER_ID]) >= atoi(argv[TOTAL_PLAYERS])) {
+        exit_with_error(INVALID_ID, name);
+    }
 
 }
 
