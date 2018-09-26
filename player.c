@@ -41,7 +41,7 @@ void check_args(int argc, char **argv, char *name) {
 void send_message(char *message, ...) {
     va_list args;
     va_start(args, message);
-    vfprintf(stdout, message, args);
+    vprintf(message, args);
     va_end(args);
     fflush(stdout);
 }
@@ -200,10 +200,25 @@ void update_tokens(Game *game, Player *player, int tokens[5]) {
 }
 
 int process_purchase(Game *game, char *encoded) {
-    // exit_with_error(COMM_ERR, "");
     char **details = split(encoded, "d");
+    if (strcmp(details[0], "purchase") != 0 ||
+            !match_seperators(details[1], 2, 4)) {
+        return 0;
+    }
     char **colSplit = split(details[1], ":");
+    if (strlen(colSplit[0]) != 1 || colSplit[0][0] < 'A'
+            || colSplit[0][0] > 'Z' || strlen(colSplit[1]) != 1
+            || (int) colSplit[1][0] - '0' < 0
+            || (int) colSplit[1][0] - '0' > 7) {
+        return 0;
+    }
     char **commaSplit = split(colSplit[2], ",");
+    for (int i = 0; i < strlen(colSplit[2]); i++) {
+        if (!is_string_digit(commaSplit[i]) ||
+                strcmp(commaSplit[i], "") == 0) {
+            return 0;
+        }
+    } 
     int playerIndex = colSplit[0][0] - 'A';
     int cardIndex = atoi(colSplit[1]);
     Card card = game->deckFaceup.cards[cardIndex];
@@ -238,7 +253,6 @@ void display_stats(Game *game) {
 }
 
 int process(Game *game, Player *player, char *encoded) {
-    //printf("recieved %s\n", encoded);
     int status;
     if (strstr(encoded, "dowhat") != NULL) {
         fprintf(stderr, "Received dowhat\n");
@@ -260,11 +274,13 @@ int process(Game *game, Player *player, char *encoded) {
         status = process_purchase(game, encoded);
     } else if (strstr(encoded, "took") != NULL) {
         status = process_took(game, encoded);
-        // printf("took status: %i\n", status);
     } else if (strstr(encoded, "wild") != NULL) {
         status = process_wild(game, encoded);
     } else {
         status = 0;
+    }
+    if (status && strstr(encoded, "dowhat") == NULL) {
+        display_stats(game);
     }
     return status;
 }
@@ -294,14 +310,10 @@ void play_game(char *amount, char *id, char *name) {
             get_winners(&game, get_highest_points(game), FALSE);
             break;
         }
-        int status = process(&game, &game.players[atoi(id)], message);
-        if (!status) {
+        if (!process(&game, &game.players[atoi(id)], message)) {
             error = COMM_ERR;
             free(message);
             break;
-        }
-        if (status && strstr(message, "dowhat") == NULL && strcmp(message, "") != 0) {
-            display_stats(&game);
         }
         free(message);
     }
