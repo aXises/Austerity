@@ -80,8 +80,13 @@ int process_tokens(char *encoded) {
     return tokens;
 }
 
-void free_game() {
-    
+void free_game(Game *game) {
+    if (game->deckFaceup.amount >= 0) {
+        free(game->deckFaceup.cards);
+    }
+    if (game->playerAmount > 0) {
+        free(game->players);
+    }
 }
 
 Player setup_player(int id, char *name) {
@@ -291,14 +296,12 @@ void play_game(char *amount, char *id, char *name) {
             break;
         }
         if (!process(&game, &game.players[atoi(id)], message)) {
-            free(game.deckFaceup.cards);
-            free(game.players);
+            free_game(&game);
             free(message);
             break;
         };
         free(message);
     }
-    free(game.deckFaceup.cards);
-    free(game.players);
+    free_game(&game);
     // fprintf(stderr, "player %s shutdown\n", id);
 }

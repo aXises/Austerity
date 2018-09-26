@@ -165,6 +165,7 @@ int attempt_purchase(Game *game, Player *player) {
             cost[BLUE], cost[YELLOW], cost[RED], cost[WILD]);
     free(d.cards);
     free(deck.cards);
+    free(cheapest.cards);
     return 1;
 }
 
