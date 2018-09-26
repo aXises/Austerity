@@ -186,7 +186,6 @@ int can_take_tokens(Game *game, Player *player) {
 
 int attempt_take_tokens(Game *game, Player *player) {
     if (!can_take_tokens(game, player)) {
-        // fprintf(stderr, "cannot take\n");
         return 0;
     }
     int tokenTakenTotal = 0;
@@ -196,8 +195,6 @@ int attempt_take_tokens(Game *game, Player *player) {
             break;
         }
         if (game->tokenPile[i] > 0) {
-            // player->tokens[i]++;
-            // game->tokenPile[i]--;
             tokenTakenTotal++;
             switch (i) {
                 case (PURPLE):
@@ -221,18 +218,9 @@ int attempt_take_tokens(Game *game, Player *player) {
 }
 
 void process_dowhat(Game *game, Player *player) {
-    fprintf(stderr, "Received dowhat\n");
-    // fprintf(stderr, "---processing dowhat by %s\n", PLAYER_NAME);
-    // send_message("purchase1:0,0,0,0,0");
-    // if (player->id == 0) {
     if (attempt_purchase(game, player)) {
-        // display_deck(game->deckFaceup);
-        // fprintf(stderr, "%i, purchasing card\n", player->id);
-        // send_message("wild\n");
     } else if (attempt_take_tokens(game, player)) {
-        // fprintf(stderr, "%i, taking tokens\n", player->id);
     } else {
-        // fprintf(stderr, "%i, taking wild\n", player->id);
         send_message("wild\n");
     }
 }

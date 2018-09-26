@@ -41,7 +41,7 @@ void check_args(int argc, char **argv, char *name) {
 void send_message(char *message, ...) {
     va_list args;
     va_start(args, message);
-    vprintf(message, args);
+    vfprintf(stdout, message, args);
     va_end(args);
     fflush(stdout);
 }
@@ -200,6 +200,7 @@ void update_tokens(Game *game, Player *player, int tokens[5]) {
 }
 
 int process_purchase(Game *game, char *encoded) {
+    // exit_with_error(COMM_ERR, "");
     char **details = split(encoded, "d");
     char **colSplit = split(details[1], ":");
     char **commaSplit = split(colSplit[2], ",");
@@ -237,9 +238,10 @@ void display_stats(Game *game) {
 }
 
 int process(Game *game, Player *player, char *encoded) {
+    //printf("recieved %s\n", encoded);
     int status;
     if (strstr(encoded, "dowhat") != NULL) {
-        // fprintf(stderr, "player %c has %i wild\n", player->id, player->wildTokens);
+        fprintf(stderr, "Received dowhat\n");
         process_dowhat(game, player);
         status = 1;
     } else if (strstr(encoded, "tokens") != NULL) {
@@ -258,13 +260,11 @@ int process(Game *game, Player *player, char *encoded) {
         status = process_purchase(game, encoded);
     } else if (strstr(encoded, "took") != NULL) {
         status = process_took(game, encoded);
+        // printf("took status: %i\n", status);
     } else if (strstr(encoded, "wild") != NULL) {
         status = process_wild(game, encoded);
     } else {
         status = 0;
-    }
-    if (status && strstr(encoded, "dowhat") == NULL) {
-        display_stats(game);
     }
     return status;
 }
@@ -294,10 +294,14 @@ void play_game(char *amount, char *id, char *name) {
             get_winners(&game, get_highest_points(game), FALSE);
             break;
         }
-        if (!process(&game, &game.players[atoi(id)], message)) {
+        int status = process(&game, &game.players[atoi(id)], message);
+        if (!status) {
             error = COMM_ERR;
             free(message);
             break;
+        }
+        if (status && strstr(message, "dowhat") == NULL && strcmp(message, "") != 0) {
+            display_stats(&game);
         }
         free(message);
     }
