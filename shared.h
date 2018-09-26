@@ -62,6 +62,7 @@ void set_player_values(Player *);
 int is_string_digit(char *);
 char **split(char *, char *);
 void display_deck(Deck);
+int check_encoded(char **, int);
 int check_card(char *);
 int match_seperators(char *, const int, const int);
 void update_discount(char, Player *);

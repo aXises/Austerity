@@ -49,7 +49,6 @@ void send_message(char *message, ...) {
 char *listen(void) {
     char *message = malloc(sizeof(char) * MAX_INPUT);
     if (fgets(message, MAX_INPUT, stdin) == NULL) {
-        // fprintf(stderr, "MESSAGE FROM HUB IS NULL\n");
         exit_with_error(COMM_ERR, "");
     }
     if (message[strlen(message) - 1] != '\0') {
@@ -139,9 +138,11 @@ int process_newcard(Game *game, char *encoded) {
     if (strcmp(cardDetails[0], "newcar") != 0 || !check_card(cardDetails[1])) {
         return 0;
     }
-    // fprintf(stderr, "str1: %s str2: %s\n", cardDetails[0], cardDetails[1]);
     char **columnSplit = split(cardDetails[1], ":");
     char **commaSplit = split(columnSplit[2], ",");
+    if (!check_encoded(commaSplit, 4)) {
+        return 0;
+    }
     Card card;
     card.colour = columnSplit[0][0];
     card.value = atoi(columnSplit[1]);
@@ -171,8 +172,10 @@ int process_took(Game *game, char *encoded) {
     }
     char **columnSplit = split(details[1], ":");
     int playerIndex = (int) columnSplit[0][0] - 'A';
-    // fprintf(stderr, "player index = %i\n", playerIndex);
     char **commaSplit = split(columnSplit[1], ",");
+    if (!check_encoded(commaSplit, 4)) {
+        return 0;
+    }
     for (int i = 0; i < 4; i++) {
         game->tokenPile[i] -= atoi(commaSplit[i]);
         game->players[playerIndex].tokens[i] += atoi(commaSplit[i]);
@@ -213,12 +216,9 @@ int process_purchase(Game *game, char *encoded) {
         return 0;
     }
     char **commaSplit = split(colSplit[2], ",");
-    for (int i = 0; i < strlen(colSplit[2]); i++) {
-        if (!is_string_digit(commaSplit[i]) ||
-                strcmp(commaSplit[i], "") == 0) {
-            return 0;
-        }
-    } 
+    if (!check_encoded(commaSplit, 5)) {
+        return 0;
+    }
     int playerIndex = colSplit[0][0] - 'A';
     int cardIndex = atoi(colSplit[1]);
     Card card = game->deckFaceup.cards[cardIndex];
@@ -279,7 +279,7 @@ int process(Game *game, Player *player, char *encoded) {
     } else {
         status = 0;
     }
-    if (status && strstr(encoded, "dowhat") == NULL) {
+    if (status && strstr(encoded, "dowhat") == NULL && strcmp(encoded, "eog") != 0) {
         display_stats(game);
     }
     return status;

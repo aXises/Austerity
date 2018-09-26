@@ -57,6 +57,17 @@ void display_deck(Deck deck) {
     }
 }
 
+int check_encoded(char **content, int length) {
+    for (int i = 0; i < length; i++) {
+        if (!is_string_digit(content[i]) ||
+                strcmp(content[i], " ") == 0 ||
+                strcmp(content[i], "") == 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 int check_card(char *content) {
     if (content[0] != 'B' && content[0] != 'Y' && content[0] != 'P' &&
             content[0] != 'R') {

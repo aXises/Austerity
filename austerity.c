@@ -397,11 +397,8 @@ int process_purchase(Game *game, Player *player, char *encoded) {
     }
     char **colSplit = split(purchaseDetails[1], ":");
     char **commaSplit = split(colSplit[1], ",");
-    for (int i = 0; i < strlen(colSplit[1]); i++) {
-        if (colSplit[1][i] != ',' && colSplit[1][i] != '\n'
-                && !isdigit(colSplit[1][i])) {
-            return 0;
-        }
+    if (!check_encoded(commaSplit, 5)) {
+        return 0;
     }
     if (atoi(colSplit[0]) > 7) {
         return 0;
@@ -466,6 +463,9 @@ int process_take(Game *game, Player *player, char *encoded) {
         return 0;
     }
     char **commaSplit = split(takeDetails[1], ",");
+    if (!check_encoded(commaSplit, 4)) {
+        return 0;
+    }
     int tokenPurple = 0, tokenBlue = 0, tokenYellow = 0, tokenRed = 0;
     for (int i = 0; i < 4; i++) {
         game->tokenPile[i] -= atoi(commaSplit[i]);
