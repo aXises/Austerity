@@ -59,7 +59,7 @@ void display_deck(Deck deck) {
 
 int check_card(char *content) {
     if (content[0] != 'B' && content[0] != 'Y' && content[0] != 'P' &&
-                content[0] != 'R') {
+            content[0] != 'R') {
         return 0;  
     }
     if (!match_seperators(content, 2, 3)) {

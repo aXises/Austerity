@@ -94,32 +94,7 @@ void exit_with_error(Game *game, int error) {
     exit(error);
 }
 
-Deck load_deck(char *fileName) {
-    FILE *file = fopen(fileName, "r");
-    if (file == NULL || !file) {
-        exit_with_error(NULL, CANNOT_ACCESS_DECK_FILE);
-    }
-    char *content = malloc(sizeof(char)), 
-    character;
-    int counter = 0, cards = 0;
-    while((character = getc(file)) != EOF) {
-        content = realloc(content, sizeof(char) * (counter + 1));
-        content[counter] = character;
-        if (character == '\n') {
-            cards++;
-        }
-        counter++;
-    }
-    fclose(file);
-    content = realloc(content, sizeof(char) * (counter + 1));
-    content[counter] = '\0';
-    if (strcmp(content, "") == 0) {
-        exit_with_error(NULL, INVALID_DECK_FILE); 
-    }
-    char **cardArr = split(content, "\n");
-    Deck deck;
-    deck.amount = cards + 1;
-    deck.cards = malloc(sizeof(Card) * deck.amount);
+void parse_deck(Deck deck, char **cardArr) {
     for (int i = 0; i < deck.amount; i++) {
         if (i != deck.amount - 1 || strcmp(cardArr[i], "") != 0) {
             if (!check_card(cardArr[i])) {
@@ -144,6 +119,34 @@ Deck load_deck(char *fileName) {
             free(commaSplit);
         }
     }
+}
+
+Deck load_deck(char *fileName) {
+    FILE *file = fopen(fileName, "r");
+    if (file == NULL || !file) {
+        exit_with_error(NULL, CANNOT_ACCESS_DECK_FILE);
+    }
+    char *content = malloc(sizeof(char)), character;
+    int counter = 0, cards = 0;
+    while((character = getc(file)) != EOF) {
+        content = realloc(content, sizeof(char) * (counter + 1));
+        content[counter] = character;
+        if (character == '\n') {
+            cards++;
+        }
+        counter++;
+    }
+    fclose(file);
+    content = realloc(content, sizeof(char) * (counter + 1));
+    content[counter] = '\0';
+    if (strcmp(content, "") == 0) {
+        exit_with_error(NULL, INVALID_DECK_FILE); 
+    }
+    char **cardArr = split(content, "\n");
+    Deck deck;
+    deck.amount = cards + 1;
+    deck.cards = malloc(sizeof(Card) * deck.amount);
+    parse_deck(deck, cardArr);
     free(content);
     free(cardArr);
     return deck;
@@ -427,7 +430,7 @@ int process_purchase(Game *game, Player *player, char *encoded) {
     //printf("tokens: %i %i %i %i\n", game->tokenPile[0], game->tokenPile[1], game->tokenPile[2], game->tokenPile[3]);
     send_all(game, "purchased%c:%i:%i,%i,%i,%i,%i\n", player->id + 'A', index,
             tokens[PURPLE], tokens[BLUE], tokens[YELLOW], tokens[RED], 
-                tokens[WILD]);
+            tokens[WILD]);
     return 1;
 }
 
@@ -509,7 +512,7 @@ int process(Game *game, Player *player, char *encoded) {
     } else if (strstr(encoded, "take") != NULL) {
         // printf("processing %s from: %c\n", encoded, player->id + 'A');
         // printf("**processing take: %i\n", x);
-        return process_take(game, player, encoded);;
+        return process_take(game, player, encoded);
     } else if (strstr(encoded, "wild") != NULL) {
         process_wild(game, player, encoded);
         return 1;

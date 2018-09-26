@@ -224,7 +224,7 @@ void display_stats(Game *game) {
     for (int i = 0; i < game->deckFaceup.amount; i++) {
         Card c = game->deckFaceup.cards[i];
         fprintf(stderr, "Card %i:%c/%i/%i,%i,%i,%i\n", i, c.colour, c.value,
-            c.cost[PURPLE], c.cost[BLUE], c.cost[YELLOW], c.cost[RED]);
+                c.cost[PURPLE], c.cost[BLUE], c.cost[YELLOW], c.cost[RED]);
     }
     for (int i = 0; i < game->playerAmount; i++) {
         Player p = game->players[i];
@@ -252,24 +252,19 @@ int process(Game *game, Player *player, char *encoded) {
             }
             status = 1;
         }
-        display_stats(game);
     } else if (strstr(encoded, "newcard") != NULL) {
-        // fprintf(stderr, "newcard\n");
         status = process_newcard(game, encoded);
-        display_stats(game);
     } else if (strstr(encoded, "purchased") != NULL) {
         status = process_purchase(game, encoded);
-        display_stats(game);
     } else if (strstr(encoded, "took") != NULL) {
-        // fprintf(stderr, "processing took\n");
         status = process_took(game, encoded);
-        display_stats(game);
     } else if (strstr(encoded, "wild") != NULL) {
-        // fprintf(stderr, "processing wild\n");
         status = process_wild(game, encoded);
-        display_stats(game);
     } else {
         status = 0;
+    }
+    if (status && strstr(encoded, "dowhat") == NULL) {
+        display_stats(game);
     }
     return status;
 }
@@ -291,6 +286,7 @@ Player *setup_players(const int amount) {
 void play_game(char *amount, char *id, char *name) {
     Game game = setup_game(atoi(amount));
     game.players = setup_players(atoi(amount));
+    int error = NORMAL;
     while (1) {
         char *message = listen();
         if (strcmp(message, "eog") == 0) {
@@ -299,11 +295,13 @@ void play_game(char *amount, char *id, char *name) {
             break;
         }
         if (!process(&game, &game.players[atoi(id)], message)) {
+            error = COMM_ERR;
             free(message);
             break;
-        };
+        }
         free(message);
     }
     free_game(&game);
+    exit_with_error(error, "");
     // fprintf(stderr, "player %s shutdown\n", id);
 }

@@ -17,7 +17,7 @@
 #define PROTOCOL_ERR 7
 #define SIGINT_RECIEVED 10
 
-enum argument {
+enum Argument {
     TOKENS = 1,
     WIN_POINTS = 2,
     DECK_FILE = 3
