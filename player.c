@@ -326,7 +326,7 @@ void display_stats(Game *game) {
     for (int i = 0; i < game->playerAmount; i++) {
         Player p = game->players[i];
         fprintf(stderr, "Player %c:%i:Discounts=%i,%i,%i,%i:Tokens=%i,%i,%i,"\
-               "%i,%i\n", p.id + 'A', p.points, p.currentDiscount[PURPLE],
+                "%i,%i\n", p.id + 'A', p.points, p.currentDiscount[PURPLE],
                 p.currentDiscount[BROWN], p.currentDiscount[YELLOW],
                 p.currentDiscount[RED], p.tokens[PURPLE], p.tokens[BROWN],
                 p.tokens[YELLOW], p.tokens[RED], p.wildTokens);
