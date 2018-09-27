@@ -215,7 +215,8 @@ void process_dowhat(Game *game, Player *player) {
                     index = cardIndex;
                 }
             }
-            if(!ed_attempt_take_tokens(game, player, game->deckFaceup.cards[index])) {
+            if(!ed_attempt_take_tokens(game, player,
+                    game->deckFaceup.cards[index])) {
                 send_message("wild\n");
             }
         }

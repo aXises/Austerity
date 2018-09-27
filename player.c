@@ -325,8 +325,8 @@ void display_stats(Game *game) {
     }
     for (int i = 0; i < game->playerAmount; i++) {
         Player p = game->players[i];
-        fprintf(stderr, "Player %c:%i:Discounts=%i,%i,%i,%i:Tokens=%i,%i,%i,%i"\
-                ",%i\n", p.id + 'A', p.points, p.currentDiscount[PURPLE],
+        fprintf(stderr, "Player %c:%i:Discounts=%i,%i,%i,%i:Tokens=%i,%i,%i,"\
+               "%i,%i\n", p.id + 'A', p.points, p.currentDiscount[PURPLE],
                 p.currentDiscount[BROWN], p.currentDiscount[YELLOW],
                 p.currentDiscount[RED], p.tokens[PURPLE], p.tokens[BROWN],
                 p.tokens[YELLOW], p.tokens[RED], p.wildTokens);
@@ -367,7 +367,8 @@ int process(Game *game, Player *player, char *encoded) {
     } else {
         status = 0;
     }
-    if (status && strstr(encoded, "dowhat") == NULL && strcmp(encoded, "eog") != 0) {
+    if (status && strstr(encoded, "dowhat") == NULL &&
+            strcmp(encoded, "eog") != 0) {
         display_stats(game);
     }
     return status;
@@ -467,7 +468,8 @@ int can_afford(Card card, Player *player) {
     int wildUsed = 0;
     for (int i = 0; i < 4; i++) {
         if (card.cost[i] - player->currentDiscount[i] > player->tokens[i]) {
-            wildUsed += card.cost[i] - player->currentDiscount[i] - player->tokens[i];
+            wildUsed += card.cost[i] -
+                    player->currentDiscount[i] - player->tokens[i];
             if (wildUsed > player->wildTokens) {
                 return 0;
             }

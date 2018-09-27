@@ -6,7 +6,7 @@
  **/
 int get_highest_cost(Deck deck, Player *player);
 int most_wild_tokens(Deck deck, Player *player);
-Deck get_card_by_Wild(Deck deck, Player *player, int wild) ;
+Deck get_card_by_wild(Deck deck, Player *player, int wild);
 int attempt_purchase(Game *game, Player *player);
 int sum_tokens(Player *player);
 int attempt_take_tokens(Game *game, Player *player);
@@ -62,7 +62,7 @@ int most_wild_tokens(Deck deck, Player *player) {
 * @param wild - The amount of wild token the card must match.
 * @return Deck - An deck of cards costing exactly n wild tokens.
 */
-Deck get_card_by_Wild(Deck deck, Player *player, int wild) {
+Deck get_card_by_wild(Deck deck, Player *player, int wild) {
     Deck newDeck;
     newDeck.cards = malloc(0);
     int counter = 0;
@@ -99,7 +99,8 @@ int attempt_purchase(Game *game, Player *player) {
     int highestCost = get_highest_cost(deck, player);
     Deck highest = get_card_by_cost(deck, player, highestCost);
     int mostWildTokens = most_wild_tokens(highest, player);
-    Deck mostWildTokensDeck = get_card_by_Wild(highest, player, mostWildTokens);
+    Deck mostWildTokensDeck = get_card_by_wild(highest, player,
+            mostWildTokens);
     int index = 8;
     for (int i = 0; i < mostWildTokensDeck.amount; i++) {
         int cardIndex = index_of_card(game->deckFaceup,

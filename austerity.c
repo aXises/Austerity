@@ -45,12 +45,14 @@ void wait_children(Game *game) {
         id = game->players[i].id;
         if (WIFEXITED(status)) {
             if (WEXITSTATUS(status) > 0) {
-                printf("Player %i ended with status %i\n", id, WEXITSTATUS(status));
+                printf("Player %i ended with status %i\n", id,
+                        WEXITSTATUS(status));
             }
             continue;
         }
         if (WIFSIGNALED(status)) {
-            printf("Player %i shutdown after receiving signal %i\n", id, WTERMSIG(status));
+            printf("Player %i shutdown after receiving signal %i\n", id,
+                    WTERMSIG(status));
         }
     }
 }
@@ -699,7 +701,7 @@ void play_game(Game *game) {
             if (!process(game, &(game->players[i]), message)) {
                 send_message(game->players[i], "dowhat\n");
                 char *reprompt = listen(game->players[i]);
-                if (!process(game, &(game->players[i]),reprompt)) {
+                if (!process(game, &(game->players[i]), reprompt)) {
                     free(reprompt);
                     send_all(game, "eog\n");
                     printf("Game ended due to disconnect\n");
