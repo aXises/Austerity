@@ -1,8 +1,8 @@
 #include "austerity.h"
 
 /**
-*
-* @param game
+* Frees memory allocated for the game.
+* @param game - The instance of the game.
 */
 void free_game(Game *game) {
     if (game->deckTotal.amount < 8) {
@@ -23,8 +23,8 @@ void free_game(Game *game) {
 }
 
 /**
-*
-* @param game
+* Kills child processes in the game.
+* @param game - The instance of the game.
 */
 void kill_children(Game *game) {
     for (int i = 0; i < game->playerAmount; i++) {
@@ -35,8 +35,8 @@ void kill_children(Game *game) {
 }
 
 /**
-*
-* @param game
+* Wait for children to exit and print the exit status.
+* @param game - The instance of the game.
 */
 void wait_children(Game *game) {
     for (int i = 0; i < game->playerAmount; i++) {
@@ -56,9 +56,9 @@ void wait_children(Game *game) {
 }
 
 /**
-*
-* @param argc
-* @param argv
+* Checks arguments to the start the hub.
+* @param argc - Argument counter.
+* @param argv - Argument vector.
 */
 void check_args(int argc, char **argv) {
     if (argc < 6 || argc > 26) {
@@ -72,20 +72,11 @@ void check_args(int argc, char **argv) {
 }
 
 /**
-*
-* @param game
-* @param error
+* Exit the hub with an error code.
+* @param game - The game instance.
+* @param error - The error code.
 */
 void exit_with_error(Game *game, int error) {
-    if (game != NULL) {
-        if (error == BAD_START) {
-            // kill_children(game);
-        }
-        // if (error > 4) {
-        //     wait_children(game);
-        // }
-        // free_game(game);
-    }
     switch(error) {
         case (WRONG_ARG_NUM):
             fprintf(stderr, "Usage: austerity tokens points deck player "\
@@ -117,9 +108,9 @@ void exit_with_error(Game *game, int error) {
 }
 
 /**
-*
-* @param deck
-* @param cardArr
+* Parse a deck and a array of string encoding of cards.
+* @param deck The deck to load the cards in to.
+* @param cardArr The array of cards to parse.
 */
 void parse_deck(Deck deck, char **cardArr) {
     for (int i = 0; i < deck.amount; i++) {
@@ -149,9 +140,9 @@ void parse_deck(Deck deck, char **cardArr) {
 }
 
 /**
-*
-* @param fileName
-* @return Deck
+* Loads a deckfile.
+* @param fileName the name of the deckfile.
+* @return Deck a loaded deck struct.
 */
 Deck load_deck(char *fileName) {
     FILE *file = fopen(fileName, "r");
@@ -185,10 +176,12 @@ Deck load_deck(char *fileName) {
 }
 
 /**
-*
-* @param game
-* @param id
-* @param input
+* Sets up the parent process to communicate with child.
+* @param game - The game instance.
+* @param id the - id of the player.
+* @param input - The input pipe.
+* @param output  - The output pipe.
+* @param test - The test pipe.
 */
 void setup_parent(Game *game, int id, int input[2],
         int output[2], int test[2]) {
@@ -211,14 +204,17 @@ void setup_parent(Game *game, int id, int input[2],
     }
     fclose(testPipe);
     free(message);
+
 }
 
 /**
-*
-* @param game
-* @param id
-* @param input
-* @param output
+* Setup child process to communicate with parent.
+* @param game - The game instance.
+* @param id - id of the player.
+* @param input - The input pipe.
+* @param output  - The output pipe.
+* @param test - The test pipe.
+* @param file - The file to execute for the child.
 */
 void setup_child(Game *game, int id, int input[2], int output[2],
         int test[2], char *file) {
@@ -269,10 +265,10 @@ void setup_child(Game *game, int id, int input[2], int output[2],
 }
 
 /**
-*
-* @param game
-* @param id
-* @param file
+* Sets up a single player in the game.
+* @param game - The game instance.
+* @param id - The player id.
+* @param file - The file name to execute.
 */
 void setup_player(Game *game, int id, char *file) {
     int input[2], output[2], test[2];
@@ -291,9 +287,9 @@ void setup_player(Game *game, int id, char *file) {
 }
 
 /**
-*
-* @param game
-* @param playerPaths
+* Sets up all the players in game.
+* @param game - The game instance.
+* @param playerPaths - An array of string of paths to the player.
 */
 void setup_players(Game *game, char **playerPaths) {
     game->players = malloc(0);
@@ -311,9 +307,9 @@ void setup_players(Game *game, char **playerPaths) {
 }
 
 /**
-*
-* @param player
-* @param message
+* Sends an message to one player.
+* @param player - The player to send the message to.
+* @param message - the content to send
 */
 void send_message(Player player, char *message, ...) {
     va_list args;
@@ -324,9 +320,9 @@ void send_message(Player player, char *message, ...) {
 }
 
 /**
-*
-* @param game
-* @param message
+* Send an message to all the players.
+* @param game - The game instance.
+* @param message - The message to send.
 */
 void send_all(Game *game, char *message, ...) {
     for (int i = 0; i < game->playerAmount; i++) {
@@ -339,9 +335,9 @@ void send_all(Game *game, char *message, ...) {
 }
 
 /**
-*
-* @param game
-* @return int
+* Determine whether if a new card can be flipped.
+* @param game - The game instance.
+* @return int - 1 if a new card can be flipped.
 * 
 */
 int has_next_card(Game *game) {
@@ -349,8 +345,8 @@ int has_next_card(Game *game) {
 }
 
 /**
-*
-* @param c
+* Displays card detail to stdout.
+* @param c - The card to display.
 */
 void display_card(Card c) {
     printf("New card = Bonus %c, worth %i, costs %i,%i,%i,%i\n", c.colour, 
@@ -359,9 +355,9 @@ void display_card(Card c) {
 }
 
 /**
-*
-* @param game
-* @param deck
+* Draws the next card and places it in to the market.
+* @param game - The game instance.
+* @param deck - The deck to place in to.
 */
 void draw_next(Game *game, Deck *deck) {
     if (has_next_card(game)) {
@@ -377,11 +373,11 @@ void draw_next(Game *game, Deck *deck) {
 }
 
 /**
-*
-* @param game
+* Draws cards and places them in to the market.
+* @param game - The game instance.
 */
 void draw_cards(Game *game) {
-    if (game->deckTotal.amount < 8) {
+    if (game->deckTotal.amount < 8) { //less than 8 cards total
         game->deckFaceup.cards = game->deckTotal.cards;
         game->deckFaceup.amount = game->deckTotal.amount;
         game->deckIndex = game->deckTotal.amount;
@@ -407,10 +403,10 @@ void draw_cards(Game *game) {
 }
 
 /**
-*
-* @param game
-* @param player
-* @param index
+* Attempt to buy a card from the market.
+* @param game - The game instance.
+* @param player - The player which bought this card.
+* @param index - The index of the card bought.
 */
 void buy_card(Game *game, Player *player, int index) {
     Deck newDeck;
@@ -436,9 +432,9 @@ void buy_card(Game *game, Player *player, int index) {
 }
 
 /**
-*
-* @param player
-* @return char
+* Listen on an player's output pipe for an message.
+* @param player - The player to listen to.
+* @return char - The message sent by the player.
 */
 char *listen(Player player) {
     char *message = malloc(sizeof(char) * MAX_INPUT);
@@ -453,15 +449,14 @@ char *listen(Player player) {
 }
 
 /**
-*
-* @param game
-* @param player
-* @param card
-* @param tokens
-* @return int
+* Use an player's tokens to purchase an card.
+* @param game - The game instance.
+* @param player - The player who used the tokens.
+* @param card - The card to apply the tokens to.
+* @param tokens - The amount of tokens spent.
+* @return int - 1 if successfully applied the tokens.
 */
 int use_tokens(Game *game, Player *player, Card card, int tokens[5]) {
-    // printf("Player %c purchased\n", player->id + 'A');
     int wild = tokens[WILD];
     for (int i = 0; i < 4; i++) {
         if (player->tokens[i] < tokens[i]) {
@@ -489,19 +484,17 @@ int use_tokens(Game *game, Player *player, Card card, int tokens[5]) {
 }
 
 /**
-*
-* @param game
-* @param player
-* @param encoded
-* @return int
+* Processes the purchase command from players.
+* @param game - The game instance.
+* @param player - The player who sent the command.
+* @param encoded - The encoded command which was sent.
+* @return int - 1 if successfully purchased.
 */
 int process_purchase(Game *game, Player *player, char *encoded) {
     if (!match_seperators(encoded, 1, 4)) {
         return 0;
     }
-    //printf("encoded: %s\n", encoded);
     char **purchaseDetails = split(encoded, "e");
-    //printf("%s %s\n", purchaseDetails[0], purchaseDetails[1]);
     if (strcmp(purchaseDetails[0], "purchas") != 0 ||
             strlen(purchaseDetails[1]) < 11) {
         return 0;            
@@ -515,7 +508,6 @@ int process_purchase(Game *game, Player *player, char *encoded) {
         return 0;
     }
     int index = atoi(colSplit[0]);
-    //printf("before use_tok player %i tokens: %i %i %i %i\n", player->id, player->tokens[0], player->tokens[1], player->tokens[2], player->tokens[3]);
     int tokens[5];
     for (int i = 0; i < 5; i++) {
         tokens[i] = atoi(commaSplit[i]);
@@ -525,7 +517,6 @@ int process_purchase(Game *game, Player *player, char *encoded) {
     int status = use_tokens(game, player, card, tokens);
     free(colSplit);
     free(purchaseDetails);
-    //printf("token status: %i\n", status);
     if (!status) {
         return 0;
     }
@@ -535,7 +526,6 @@ int process_purchase(Game *game, Player *player, char *encoded) {
             index, tokens[PURPLE], tokens[BROWN], tokens[YELLOW], tokens[RED],
             tokens[WILD]);
     buy_card(game, player, index);
-    //printf("tokens: %i %i %i %i\n", game->tokenPile[0], game->tokenPile[1], game->tokenPile[2], game->tokenPile[3]);
     send_all(game, "purchased%c:%i:%i,%i,%i,%i,%i\n", player->id + 'A', index,
             tokens[PURPLE], tokens[BROWN], tokens[YELLOW], tokens[RED], 
             tokens[WILD]);
@@ -543,10 +533,10 @@ int process_purchase(Game *game, Player *player, char *encoded) {
 }
 
 /**
-*
-* @param game
-* @param content
-* @return int
+* Check whether if the take action is valid.
+* @param game - The game instance.
+* @param content - The content of the message.
+* @return int - 1 if the action is valid.
 */
 int check_take(Game *game, char *content) {
     if (!match_seperators(content, 0, 3)) {
@@ -576,9 +566,17 @@ int check_take(Game *game, char *content) {
     return 1;
 }
 
+/**
+* Process an player taking tokens.
+* @param game - The game instance.
+* @param player - The player which is performing this action.
+* @param encoded - The content of the message.
+* @return int - 1 if the action is valid.
+*/
 int process_take(Game *game, Player *player, char *encoded) {
     char **takeDetails = split(encoded, "e");
-    if (strcmp(takeDetails[0], "tak") != 0 || !check_take(game, takeDetails[1])) {
+    if (strcmp(takeDetails[0], "tak") != 0 ||
+            !check_take(game, takeDetails[1])) {
         free(takeDetails);
         return 0;
     }
@@ -590,7 +588,6 @@ int process_take(Game *game, Player *player, char *encoded) {
     for (int i = 0; i < 4; i++) {
         game->tokenPile[i] -= atoi(commaSplit[i]);
         player->tokens[i] += atoi(commaSplit[i]);
-        // printf("HUB: player %i add %i:%i, total %i\n", player->id, i, atoi(commaSplit[i]), player->tokens[i]);
         switch (i) {
             case (PURPLE):
                 tokenPurple = atoi(commaSplit[i]);
@@ -616,11 +613,11 @@ int process_take(Game *game, Player *player, char *encoded) {
 }
 
 /**
-*
-* @param game
-* @param player
-* @param encoded
-* @return int
+* Process taking an while token
+* @param game - The game instance.
+* @param player - The player which is performing this action.
+* @param encoded - The content of the message.
+* @return int - 1 if the action is valid.
 */
 int process_wild(Game *game, Player *player, char *encoded) {
     if (strlen(encoded) != 4) {
@@ -632,33 +629,28 @@ int process_wild(Game *game, Player *player, char *encoded) {
 }
 
 /**
-*
-* @param game
-* @param player
-* @param encoded
-* @return int
+* Process messages sent by the player.
+* @param game - The game instance.
+* @param player - The player which is performing this action.
+* @param encoded - The content of the message.
+* @return int - 1 if the action was successfully performed.
 */
 int process(Game *game, Player *player, char *encoded) {
     if (strstr(encoded, "purchase") != NULL) {
-        //printf("%i, attempt to purchase: %s\n", player->id, encoded);
-        //fprintf(stderr, "before cost card 2 player %i tokens: %i %i %i %i\n", player->id, player->tokens[0], player->tokens[1], player->tokens[2], player->tokens[3]);
         return process_purchase(game, player, encoded);
     } else if (strstr(encoded, "take") != NULL) {
-        // printf("processing %s from: %c\n", encoded, player->id + 'A');
-        // printf("**processing take: %i\n", x);
         return process_take(game, player, encoded);
     } else if (strstr(encoded, "wild") != NULL) {
         process_wild(game, player, encoded);
         return 1;
     } else {
-        //printf("INVALID COMM BY PLAYER recieved %s\n", encoded);
         return 0;
     }
 }
 
 /**
-*
-* @param game
+* Initializes the game.
+* @param game - The game to initialize.
 */
 void init_game(Game *game) {
     draw_cards(game);
@@ -671,9 +663,9 @@ void init_game(Game *game) {
 }
 
 /**
-*
-* @param game
-* @return int
+* Check if the game is over.
+* @param game - The game instance to check if it is over.
+* @return int - 1 if the game has ended.
 */
 int game_is_over(Game game) {
     for (int i = 0; i < game.playerAmount; i++) {
@@ -685,8 +677,8 @@ int game_is_over(Game game) {
 }
 
 /**
-*
-* @param game
+* Begin playing the game.
+* @param game - The game instance to play.
 */
 void play_game(Game *game) {
     init_game(game);
@@ -705,8 +697,13 @@ void play_game(Game *game) {
             send_message(game->players[i], "dowhat\n");
             char *message = listen(game->players[i]);
             if (!process(game, &(game->players[i]), message)) {
-                send_all(game, "eog\n");
-                printf("Game ended due to disconnect\n");
+                send_message(game->players[i], "dowhat\n");
+                char *reprompt = listen(game->players[i]);
+                if (!process(game, &(game->players[i]),reprompt)) {
+                    free(reprompt);
+                    send_all(game, "eog\n");
+                    printf("Game ended due to disconnect\n");
+                }
             }
             free(message);
         }
@@ -714,7 +711,24 @@ void play_game(Game *game) {
     send_all(game, "eog\n");
 }
 
+/** sigint handler */
+void sigint_handle(int sig) {
+    exit_with_error(NULL, NORMAL);
+}
+
+/** Setup signal handlers */
+void setup_signal_action(void) {
+    struct sigaction signalInt;
+    signalInt.sa_handler = sigint_handle;
+    sigaction(SIGINT, &signalInt, 0);
+    struct sigaction signalPipe;
+    signalPipe.sa_handler = SIG_IGN;
+    sigaction(SIGPIPE, &signalPipe, 0);
+}
+
+/** Main */
 int main(int argc, char **argv) {
+    // setup_signal_action(); // Causes many memory leaks.
     check_args(argc, argv);
     Game game;
     game.winPoints = atoi(argv[WIN_POINTS]);

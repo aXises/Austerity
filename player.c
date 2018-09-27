@@ -1,9 +1,9 @@
 #include "player.h"
 
 /**
-*
-* @param error
-* @param name
+* Exit the program with an error.
+* @param error - The error code.
+* @param name - The name of the player.
 */
 void exit_with_error(int error, char *name) {
     switch(error) {
@@ -26,10 +26,10 @@ void exit_with_error(int error, char *name) {
 }
 
 /**
-*
-* @param argc
-* @param argv
-* @param name
+* Checks arguments to the start the hub.
+* @param argc - Argument counter.
+* @param argv - Argument vector.
+* @param name - The name of the player.
 */
 void check_args(int argc, char **argv, char *name) {
     if (argc != 3) {
@@ -50,8 +50,8 @@ void check_args(int argc, char **argv, char *name) {
 }
 
 /**
-*
-* @param message
+* Sends an message to the hub.
+* @param message The message to send.
 */
 void send_message(char *message, ...) {
     va_list args;
@@ -62,8 +62,8 @@ void send_message(char *message, ...) {
 }
 
 /**
-*
-* @return char
+* Listen on stdin for an message from the hub.
+* @return char - The message from the hub.
 */
 char *listen(void) {
     char *message = malloc(sizeof(char) * MAX_INPUT);
@@ -77,9 +77,9 @@ char *listen(void) {
 }
 
 /**
-*
-* @param encoded
-* @return int
+* Processes the token message.
+* @param encoded - The encoded message.
+* @return int - 1 if successfully processed.
 */
 int process_tokens(char *encoded) {
     if (strlen(encoded) < 7) {
@@ -107,8 +107,8 @@ int process_tokens(char *encoded) {
 }
 
 /**
-*
-* @param game
+* Frees memory allocated to the game.
+* @param game - The game instance to free.
 */
 void free_game(Game *game) {
     if (game->deckFaceup.amount >= 0) {
@@ -120,10 +120,10 @@ void free_game(Game *game) {
 }
 
 /**
-*
-* @param id
-* @param name
-* @return Player
+* Sets up an player
+* @param id - The id of the player.
+* @param name - The name of the player.
+* @return Player - A initial state of a player.
 */
 Player setup_player(int id, char *name) {
     Player player;
@@ -138,9 +138,9 @@ Player setup_player(int id, char *name) {
 }
 
 /**
-*
-* @param amount
-* @return Game
+* Sets up an game.
+* @param amount - The total amount of players.
+* @return Game - An initial state of a game.
 */
 Game setup_game(int amount) {
     Game game;
@@ -151,9 +151,9 @@ Game setup_game(int amount) {
 }
 
 /**
-*
-* @param deck
-* @param index
+* Removes a card from an deck by its index.
+* @param deck - The deck to remove from.
+* @param index - The index of the card.
 */
 void remove_card(Deck *deck, int index) {
     deck->amount--;
@@ -172,10 +172,9 @@ void remove_card(Deck *deck, int index) {
 }
 
 /**
-*
-* @param deck
-* @param card
-* adds 1 card to the deck.
+* Add a card to an deck.
+* @param deck - The deck to add to.
+* @param card - The card to add.
 */
 void add_card(Deck *deck, Card card) {
     deck->cards = realloc(deck->cards, sizeof(Card) * (deck->amount + 1));
@@ -184,10 +183,10 @@ void add_card(Deck *deck, Card card) {
 }
 
 /**
-*
-* @param game
-* @param encoded
-* @return int
+* Processes the newcard message from the hub.
+* @param game - The game instance.
+* @param encoded - The encoded message.
+* @return int - 1 if successfully processed.
 */
 int process_newcard(Game *game, char *encoded) {
     char **cardDetails = split(encoded, "d");
@@ -208,20 +207,18 @@ int process_newcard(Game *game, char *encoded) {
         }
         card.cost[i] = atoi(commaSplit[i]);
     }
-    // fprintf(stderr, "current size at process new card :%i\n", game->deckFaceup.amount);
     add_card(&game->deckFaceup, card);
     free(columnSplit);
     free(commaSplit);
     free(cardDetails);
-    // fprintf(stderr, "checkcard res: %i\n", check_card(s[1]));
     return 1;
 }
 
 /**
-*
-* @param encoded
-* @param game
-* @return int
+* Process an take token action.
+* @param game - The game instance.
+* @param encoded - The content of the message.
+* @return int - 1 if successfully processed.
 */
 int process_took(Game *game, char *encoded) {
     char **details = split(encoded, "k");
@@ -249,10 +246,10 @@ int process_took(Game *game, char *encoded) {
 }
 
 /**
-*
-* @param game
-* @param encoded
-* @return int
+* Processes an wild token command.
+* @param game - The game instance.
+* @param encoded - The encoded message.
+* @return int - 1 if successfully processed.
 */
 int process_wild(Game *game, char *encoded) {
     if (strlen(encoded) != 5 || encoded[4] > 'Z' || encoded[4] < 'A') {
@@ -263,10 +260,10 @@ int process_wild(Game *game, char *encoded) {
 }
 
 /**
-*
-* @param game
-* @param player
-* @param tokens
+* Update an player's total amount of tokens.
+* @param game - The game instance.
+* @param player - The player who used the tokens.
+* @param tokens - The amount of tokens spent.
 */
 void update_tokens(Game *game, Player *player, int tokens[5]) {
     for (int i = 0; i < 4; i++) {
@@ -277,10 +274,10 @@ void update_tokens(Game *game, Player *player, int tokens[5]) {
 }
 
 /**
-*
-* @param game
-* @param encoded
-* @return int
+* Processes the purchase command from players.
+* @param game - The game instance.
+* @param encoded - The encoded command which was sent.
+* @return int - 1 if successfully purchased.
 */
 int process_purchase(Game *game, char *encoded) {
     char **details = split(encoded, "d");
@@ -317,8 +314,8 @@ int process_purchase(Game *game, char *encoded) {
 }
 
 /**
-*
-* @param game
+* Display the game status.
+* @param game - The game instance.
 */
 void display_stats(Game *game) {
     for (int i = 0; i < game->deckFaceup.amount; i++) {
@@ -337,11 +334,11 @@ void display_stats(Game *game) {
 }
 
 /**
-*
-* @param game
-* @param player
-* @param encoded
-* @return int
+* Process encoded messages sent from the hub.
+* @param game - The game instance.
+* @param player - The current active player.
+* @param encoded - The encoded string.
+* @return int - 1 if the encoded string was processed succcessfully.
 */
 int process(Game *game, Player *player, char *encoded) {
     int status;
@@ -377,9 +374,9 @@ int process(Game *game, Player *player, char *encoded) {
 }
 
 /**
-*
-* @param amount
-* @return Player
+* Setup initial players.
+* @param amount - The amount of players to set up.
+* @return Player - An array of players.
 */
 Player *setup_players(const int amount) {
     Player *players = malloc(0);
@@ -396,10 +393,10 @@ Player *setup_players(const int amount) {
 }
 
 /**
-*
-* @param amount
-* @param id
-* @param name
+* Begin playing an game.
+* @param amount - The total amount of players.
+* @param id - The id of the current player.
+* @param name - The name of the current player.
 */
 void play_game(char *amount, char *id, char *name) {
     Game game = setup_game(atoi(amount));
@@ -424,9 +421,9 @@ void play_game(char *amount, char *id, char *name) {
 }
 
 /**
-*
-* @param deck
-* @return int
+* Gets the largest point of an card in an deck.
+* @param deck - The deck to parse.
+* @return int - The largest point.
 */
 int largest_value(Deck deck) {
     int largest = 0;
@@ -439,10 +436,10 @@ int largest_value(Deck deck) {
 }
 
 /**
-*
-* @param deck
-* @param value
-* @return Deck
+* Gets an deck of cards which match a certain value.
+* @param deck - The deck to parse.
+* @param value - The value to match.
+* @return Deck - Deck of cards which match the value.
 */
 Deck get_card_by_value(Deck deck, int value) {
     Deck newDeck;
@@ -461,10 +458,10 @@ Deck get_card_by_value(Deck deck, int value) {
 }
 
 /**
-*
-* @param card
-* @param player
-* @return int
+* Check if an player can afford the card.
+* @param card - The card to check.
+* @param player - The player to compare to.
+* @return int - 1 if the player can afford the card.
 */
 int can_afford(Card card, Player *player) {
     int wildUsed = 0;
@@ -480,10 +477,10 @@ int can_afford(Card card, Player *player) {
 }
 
 /**
-*
-* @param deck
-* @param player
-* @return Deck
+* Gets the deck of cards which is affordable by an player.
+* @param deck - The deck to parse.
+* @param player - The active player.
+* @return Deck - The deck of cards which is affordable by an player.
 */
 Deck affordable_cards(Deck deck, Player *player) {
     Deck newDeck;
@@ -502,10 +499,10 @@ Deck affordable_cards(Deck deck, Player *player) {
 }
 
 /**
-*
-* @param card
-* @param player
-* @param finalCost
+* Gets the cost of an card.
+* @param card - The card to get the cost of.
+* @param player - The player who wants to know.
+* @param finalCost - The final cost.
 */
 void cost_of_card(Card card, Player *player, int finalCost[5]) {
     for (int i = 0; i < 5; i++) {
@@ -528,9 +525,9 @@ void cost_of_card(Card card, Player *player, int finalCost[5]) {
 }
 
 /**
-*
-* @param cost
-* @return int
+* Sums the total cost.
+* @param cost - Array of prices to sum.
+* @return int - Total sum of the array.
 */
 int sum_cost(int cost[5]) {
     int sum = 0;
@@ -541,11 +538,11 @@ int sum_cost(int cost[5]) {
 }
 
 /**
-*
-* @param deck
-* @param player
-* @param costTotal
-* @return Deck
+* Gets an deck of cards which match a total cost.
+* @param deck - The deck to parse.
+* @param player - The active player.
+* @param costTotal - The value to match.
+* @return Deck - Deck of cards which match the cost.
 */
 Deck get_card_by_cost(Deck deck, Player *player, int costTotal) {
     Deck newDeck;
@@ -566,10 +563,10 @@ Deck get_card_by_cost(Deck deck, Player *player, int costTotal) {
 }
 
 /**
-*
-* @param game
-* @param player
-* @return int
+* Check if an player can take tokens.
+* @param game - The game instance.
+* @param player - The player to check.
+* @return int - 1 if tokens can be taken.
 */
 int can_take_tokens(Game *game, Player *player) {
     int emptyPile = 0;
@@ -584,6 +581,13 @@ int can_take_tokens(Game *game, Player *player) {
     return 1;
 }
 
+
+/**
+* Attempt to purchase an card.
+* @param game - The game instance.
+* @param player - The player who wants to purchase.
+* @param index - The index of the card. 
+*/
 void purchase_card(Game *game, Player *player, int index) {
     int cost[5];
     cost_of_card(game->deckFaceup.cards[index], player, cost);

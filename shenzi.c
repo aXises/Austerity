@@ -1,7 +1,13 @@
 #include "player.h"
 #define PLAYER_NAME "shenzi"
 
+/**
+ * Function Prototypes
+ **/
+int attempt_purchase(Game *game, Player *player);
+int attempt_take_tokens(Game *game, Player *player);
 
+/** Main */
 int main(int argc, char **argv) {
     check_args(argc, argv, PLAYER_NAME);
     play_game(argv[TOTAL_PLAYERS], argv[PLAYER_ID], PLAYER_NAME);
@@ -9,10 +15,10 @@ int main(int argc, char **argv) {
 }
 
 /**
-*
-* @param game
-* @param player
-* @return int
+* Attempt to purchase an card by player shenzi
+* @param game - The game instance.
+* @param player - The active player.
+* @return int - 1 if can and have purchased an card.
 */
 int attempt_purchase(Game *game, Player *player) {
     Deck deck = affordable_cards(game->deckFaceup, player);
@@ -47,10 +53,10 @@ int attempt_purchase(Game *game, Player *player) {
 }
 
 /**
-*
-* @param game
-* @param player
-* @return int
+* Attempt to take tokens.
+* @param game - The game instance.
+* @param player - The active player.
+* @return int - 1 if tokens can be and has been taken.
 */
 int attempt_take_tokens(Game *game, Player *player) {
     if (!can_take_tokens(game, player)) {
@@ -86,9 +92,9 @@ int attempt_take_tokens(Game *game, Player *player) {
 }
 
 /**
-*
-* @param game
-* @param player
+* Processes downhat by shenzi.
+* @param game - The game instance.
+* @param player - The active player.
 */
 void process_dowhat(Game *game, Player *player) {
     if (attempt_purchase(game, player)) {

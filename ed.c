@@ -1,12 +1,27 @@
 #include "player.h"
 #define PLAYER_NAME "ed"
 
+/**
+ * Function Prototypes
+ **/
+int attempt_take_tokens(Game *game, Player *player);
+Deck others_can_afford(Game *game, Player *player);
+int ed_attempt_take_tokens(Game *game, Player *player, Card potentialCard);
+Deck next_player_can_afford(Game *game, Player *player, Deck deck);
+
+/** Main */
 int main(int argc, char **argv) {
     check_args(argc, argv, PLAYER_NAME);
     play_game(argv[TOTAL_PLAYERS], argv[PLAYER_ID], PLAYER_NAME);
     return 0;
 }
 
+/**
+* Attempt to take tokens by player ed.
+* @param game - The game instance.
+* @param player - The active player.
+* @return int - 1 if tokens can be and has been taken.
+*/
 int attempt_take_tokens(Game *game, Player *player) {
     if (!can_take_tokens(game, player)) {
         return 0;
@@ -39,6 +54,12 @@ int attempt_take_tokens(Game *game, Player *player) {
     return 1;
 }
 
+/**
+* Generates an deck of cards which can be afforded by other players.
+* @param game - The game instance.
+* @param player - The active player.
+* @return Deck - An deck of cards which can be afforded by other players.
+*/
 Deck others_can_afford(Game *game, Player *player) {
     Deck newDeck;
     newDeck.cards = malloc(0);
@@ -60,6 +81,13 @@ Deck others_can_afford(Game *game, Player *player) {
     return newDeck;
 }
 
+/**
+* Attempt to take tokens according to a card Ed wants.
+* @param game - The game instance.
+* @param player - The active player.
+* @param potentialCard - The card Ed wants.
+* @return int - 1 if can and has taken tokens.
+*/
 int ed_attempt_take_tokens(Game *game, Player *player, Card potentialCard) {
     if (!can_take_tokens(game, player)) {
         return 0;
@@ -103,6 +131,13 @@ int ed_attempt_take_tokens(Game *game, Player *player, Card potentialCard) {
     return 1;
 }
 
+/**
+* Gets an deck of cards which the next player can potentially buy.
+* @param game - The game instance.
+* @param player - The active player.
+* @param deck - The deck to parse.
+* @return Deck - The deck of cards next players can afford.
+*/
 Deck next_player_can_afford(Game *game, Player *player, Deck deck) {
     Deck newDeck;
     newDeck.cards = malloc(0);
@@ -143,6 +178,11 @@ Deck next_player_can_afford(Game *game, Player *player, Deck deck) {
     return newDeck;
 }
 
+/**
+* Processes downhat by ed.
+* @param game - The game instance.
+* @param player - The active player.
+*/
 void process_dowhat(Game *game, Player *player) {
     Deck affordableCardsByOther = others_can_afford(game, player);
     int highestValue = largest_value(affordableCardsByOther);

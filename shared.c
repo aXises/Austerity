@@ -1,11 +1,11 @@
 #include "shared.h"
 
 /**
-*
-* @param deck
-* @param card
-* @param first
-* @return int
+* Gets the index of an card in a deck.
+* @param deck - The deck to parse.
+* @param card - The card to retrieve the index of.
+* @param first - Get the first matching instance or last.
+* @return int - Index of the card.
 */
 int index_of_card(Deck deck, Card card, int first) {
     int index = -1;
@@ -27,8 +27,8 @@ int index_of_card(Deck deck, Card card, int first) {
 }
 
 /**
-*
-* @param player
+* Setup initial player values.
+* @param player - The players to set the values by.
 */
 void set_player_values(Player *player) {
     player->wildTokens = 0;
@@ -40,9 +40,9 @@ void set_player_values(Player *player) {
 }
 
 /**
-*
-* @param string
-* @return int
+* Check if a string is an digit.
+* @param string - The string to check.
+* @return int - 1 if the string contains only digits.
 */
 int is_string_digit(char *string) {
     for (int i = 0; i < strlen(string); i++) {
@@ -54,10 +54,10 @@ int is_string_digit(char *string) {
 }
 
 /**
-*
-* @param string
-* @param character
-* @return char
+* Split an string in to an array of strings by an character.
+* @param string - The string to split.
+* @param character - The character to split it by.
+* @return char - An array of split strings.
 */
 char **split(char *string, char *character) {
     char *segment;
@@ -72,22 +72,10 @@ char **split(char *string, char *character) {
 }
 
 /**
-*
-* @param deck
-*/
-void display_deck(Deck deck) {
-    for (int i = 0; i < deck.amount; i++) {
-        Card c = deck.cards[i];
-        fprintf(stderr, "%i: %c %i %i %i %i %i\n", i, c.colour, c.value, c.cost[0],
-                c.cost[1], c.cost[2], c.cost[3]);
-    }
-}
-
-/**
-*
-* @param content
-* @param length
-* @return int
+* Check an array of strings to ensure no empty or space characters.
+* @param content - The array of strings to check.
+* @param length - The length of the array/
+* @return int - True if the array contains no spaces or is not empty.
 */
 int check_encoded(char **content, int length) {
     for (int i = 0; i < length; i++) {
@@ -101,9 +89,9 @@ int check_encoded(char **content, int length) {
 }
 
 /**
-*
-* @param content
-* @return int
+* Checks an encoded card for validity.
+* @param content - The encoded content.
+* @return int - 1 if the encoded card is valid.
 */
 int check_card(char *content) {
     if (content[0] != 'B' && content[0] != 'Y' && content[0] != 'P' &&
@@ -123,10 +111,11 @@ int check_card(char *content) {
 }
 
 /**
-*
-* @param str
-* @param expectedColumn
-* @return int
+* Match the amount of seperators in a string.
+* @param str - The string to parse.
+* @param expectedColumn - The expected amount of columns.
+* @param expectedComma - The expected amount of commas.
+* @return int - 1 if the amount of seperators match.
 */
 int match_seperators(char *str, const int expectedColumn,
         const int expectedComma) {
@@ -145,9 +134,9 @@ int match_seperators(char *str, const int expectedColumn,
 }
 
 /**
-*
-* @param colour
-* @param player
+* Updates the player discounts.
+* @param colour - The colour of the discount to update.
+* @param player - The player to update.
 */
 void update_discount(char colour, Player *player) {
     switch (colour) {
@@ -167,9 +156,9 @@ void update_discount(char colour, Player *player) {
 }
 
 /**
-*
-* @param game
-* @return int
+* Gets the highest points an player has.
+* @param game - The game instance.
+* @return int - Highest point of an player/
 */
 int get_highest_points(Game game) {
     int highestPoint = 0;
@@ -182,10 +171,10 @@ int get_highest_points(Game game) {
 }
 
 /**
-*
-* @param game
-* @param points
-* @param isHub
+* Get the winners of a game.
+* @param game - The game instance.
+* @param points - The points the players must match.
+* @param isHub - Is the caller from the hub or player.
 */
 void get_winners(Game *game, int points, int isHub) {
     Player *winners = malloc(0);
